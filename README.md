@@ -15,6 +15,23 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 
 ## Setup and Configuration
 
-Monic is simple by design. The only piece of information Monic needs to run is the PostgreSQL connection string
+Monic is simple by design. The only piece of information Monic needs to run is the PostgreSQL connection string.
+The connection string can be specified either through the environment variable `MONIC_POSTGRES_URI` or through the value `POSTGRES_URI` in the `~/.monic.toml` config file.
+
+```
+# example ~/.monic.toml
+POSTGRES_URI="postgres://user:pwd@host:5432/monic"
+```
+
 TODO: configuration example
 
+## Known Issues
+
+Installing `psycopg2` fails on Apple Silicon inside of venv. If you stumble upon this issue, it's easy enough to fix by pointing clang linker to the openssl:
+
+```
+export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl/include"
+```
+
+More here: https://stackoverflow.com/questions/26288042/error-installing-psycopg2-library-not-found-for-lssl

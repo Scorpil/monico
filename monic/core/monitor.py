@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 from monic.utils import is_valid_url
 
@@ -12,15 +13,21 @@ class Monitor:
     endpoint: str
     interval: int
 
-    def __init__(self, id: Optional[str], name: str, endpoint: str, interval: int = 60):
-        self.id = id
+    def __init__(
+        self, mid: Optional[str], name: str, endpoint: str, interval: int = 60
+    ):
+        self.id = self.preprocess_id(mid) if mid else None
         self.name = self.preprocess_name(name)
         self.endpoint = self.preprocess_endpoint(endpoint)
         self.interval = self.preprocess_interval(interval)
 
-    @classmethod
-    def new(cls, name: str, endpoint: str, interval: Optional[int]):
-        return cls(None, name, endpoint, interval)
+    @staticmethod
+    def preprocess_id(value: str):
+        if not re.match(r"^[A-Za-z0-9_-]+$", value):
+            raise MonitorAttributeError(
+                f"Monitor ID can only contain alphanumeric characters, underscores and dashes. Got {value}"
+            )
+        return value
 
     @staticmethod
     def preprocess_name(value: str):

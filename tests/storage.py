@@ -3,9 +3,9 @@ from monic.core.storage import StorageInterface
 from monic.core.monitor import Monitor
 
 
-class LocalStorage(StorageInterface):
+class MemStorage(StorageInterface):
     """
-    Local storage implementation for monic.
+    Memory storage implementation for monic.
     Used for testing to avoid database dependencies.
     """
 

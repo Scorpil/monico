@@ -9,7 +9,7 @@ def is_valid_url(url: str) -> bool:
     """
     try:
         result = urlparse(url)
-        if not bool(result.scheme):
+        if result.scheme not in ["http", "https"]:
             return False
 
         # this is a very basic check, but it should be enough to catch typos
