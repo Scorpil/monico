@@ -1,6 +1,11 @@
 import uuid
 import psycopg2
-from monic.core.storage import StorageInterface, StorageSetupException
+from monic.core.storage import (
+    StorageInterface,
+    StorageSetupException,
+    MonitorAlreadyExistsException,
+    MonitorNotFoundException,
+)
 from monic.core.monitor import Monitor
 
 
@@ -49,22 +54,44 @@ class PgStorage(StorageInterface):
         if not monitor.id:
             monitor.id = str(uuid.uuid4())
         cur = self.conn.cursor()
-        cur.execute(
-            "INSERT INTO monitors (id, name, endpoint, interval) VALUES (%s, %s, %s, %s)",
-            (monitor.id, monitor.name, monitor.endpoint, monitor.interval),
-        )
-        self.conn.commit()
+        try:
+            cur.execute(
+                "INSERT INTO monitors (id, name, endpoint, interval) VALUES (%s, %s, %s, %s)",
+                (monitor.id, monitor.name, monitor.endpoint, monitor.interval),
+            )
+            self.conn.commit()
+        except psycopg2.errors.UniqueViolation:
+            raise MonitorAlreadyExistsException(
+                f'Monitor with ID "{monitor.id}" already exists'
+            )
         return Monitor(monitor.id, monitor.name, monitor.endpoint, monitor.interval)
 
     def list_monitors(self):
-        return list(self.monitors.values())
+        cur = self.conn.cursor()
+        cur.execute("SELECT id, name, endpoint, interval FROM monitors")
+        rows = cur.fetchall()
+        cur.close()
+        return [Monitor(*row) for row in rows]
 
     def read_monitor(self, id):
-        return self.monitors[id]
+        cur = self.conn.cursor()
+        cur.execute(
+            "SELECT id, name, endpoint, interval FROM monitors WHERE id = %s", (id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise MonitorNotFoundException(f'Monitor with ID "{id}" not found')
+        cur.close()
+        return Monitor(*row)
 
     def update_monitor(self, monitor):
         self.monitors[monitor.id] = monitor
         return monitor
 
     def delete_monitor(self, id):
-        del self.monitors[id]
+        cur = self.conn.cursor()
+        monitor = self.read_monitor(id)
+        cur.execute("DELETE FROM monitors WHERE id = %s", (id,))
+        self.conn.commit()
+        cur.close()
+        return monitor

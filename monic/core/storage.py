@@ -18,6 +18,12 @@ class MonitorAlreadyExistsException(Exception):
     pass
 
 
+class MonitorNotFoundException(Exception):
+    """Exception raised when a monitor is not found"""
+
+    pass
+
+
 class StorageInterface(ABC):
     def connect(self):
         """Connects to the storage backend"""
