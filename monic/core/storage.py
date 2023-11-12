@@ -1,8 +1,10 @@
 """
 Defines an abstract storage class for storing monic data.
 """
+from enum import Enum
 from abc import ABC, abstractmethod
 from monic.core.monitor import Monitor
+from monic.core.task import Task
 
 
 class StorageSetupException(Exception):
@@ -22,6 +24,13 @@ class MonitorNotFoundException(Exception):
     """Exception raised when a monitor is not found"""
 
     pass
+
+
+class MonitorSortingOrder(Enum):
+    """Defines the sorting order for monitors"""
+
+    CREATED_AT_ASC = "created_at_asc"
+    LAST_TASK_AT_DESC = "last_task_at_desc"
 
 
 class StorageInterface(ABC):
@@ -47,7 +56,9 @@ class StorageInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def list_monitors(self) -> [Monitor]:
+    def list_monitors(
+        self, sort: MonitorSortingOrder = MonitorSortingOrder.CREATED_AT_ASC
+    ) -> [Monitor]:
         """Lists all monitors"""
         raise NotImplementedError
 
@@ -67,8 +78,18 @@ class StorageInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_task(self, task):
+    def create_task(self, task: Task):
         """Creates a new task"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
+        """Locks a batch of tasks"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_task(self, task: Task):
+        """Updates a task"""
         raise NotImplementedError
 
     @abstractmethod

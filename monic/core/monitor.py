@@ -3,6 +3,7 @@ from typing import Optional
 from typing import Optional
 from monic.utils import is_valid_url
 from monic.core.probe import ProbeResponseError, Probe
+from monic.core.task import Task
 
 
 class MonitorAttributeError(ValueError):
@@ -14,14 +15,24 @@ class Monitor:
     name: str
     endpoint: str
     interval: int
+    last_task_at: Optional[int]
+    last_probe_at: Optional[int]
 
     def __init__(
-        self, mid: Optional[str], name: str, endpoint: str, interval: int = 60
+        self,
+        mid: Optional[str],
+        name: str,
+        endpoint: str,
+        interval: int = 60,
+        last_task_at: Optional[int] = None,
+        last_probe_at: Optional[int] = None,
     ):
         self.id = self.preprocess_id(mid) if mid else None
         self.name = self.preprocess_name(name)
         self.endpoint = self.preprocess_endpoint(endpoint)
         self.interval = self.preprocess_interval(interval)
+        self.last_task_at = last_task_at
+        self.last_probe_at = last_probe_at
 
     def new_probe(
         self,
@@ -33,6 +44,12 @@ class Monitor:
         return Probe(
             self.id, response_time, response_code, response_error, content_match
         )
+
+    def new_task(self):
+        return Task.create(self.id)
+
+    def __repr__(self):
+        return f"<Monitor {self.id} ({self.name})>"
 
     @staticmethod
     def preprocess_id(value: str):

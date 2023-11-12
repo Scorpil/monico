@@ -10,6 +10,7 @@ class Config:
         "./.monic.toml",  # Current working directory
     ]
     postgres_uri: Optional[str] = None
+    log_level: str = "INFO"
 
     @staticmethod
     def build():
@@ -22,7 +23,7 @@ class Config:
         self.postgres_uri = postgres_uri
 
     def __repr__(self):
-        return f"<Config postgres_uri={self.postgres_uri}>"
+        return f"<Config postgres_uri={self.postgres_uri} log_level={self.log_level}>"
 
     def load_from_config_file(self):
         """Builds config from config file"""
@@ -30,13 +31,12 @@ class Config:
             try:
                 with open(os.path.expanduser(location)) as f:
                     file_config = toml.load(f)
-                    self.postgres_uri = (
-                        file_config.get("postgres_uri", None) or self.postgres_uri
-                    )
+                self.postgres_uri = file_config.get("postgres_uri", self.postgres_uri)
+                self.log_level = file_config.get("log_level", self.log_level)
             except FileNotFoundError:
                 pass
 
     def load_from_env(self, environment: dict = os.environ):
         """Builds config from environment variables"""
-        if not self.postgres_uri:
-            self.postgres_uri = environment.get("MONIC_POSTGRES_URI", None)
+        self.postgres_uri = environment.get("MONIC_POSTGRES_URI", self.postgres_uri)
+        self.log_level = environment.get("MONIC_LOG_LEVEL", self.log_level)

@@ -5,8 +5,10 @@ from monic.core.storage import (
     StorageSetupException,
     MonitorAlreadyExistsException,
     MonitorNotFoundException,
+    MonitorSortingOrder,
 )
 from monic.core.monitor import Monitor
+from monic.core.task import Task, TaskStatus
 from monic.core.probe import ProbeResponseError
 
 
@@ -47,6 +49,7 @@ class PgStorage(StorageInterface):
                     name TEXT NOT NULL,
                     endpoint TEXT NOT NULL,
                     interval INT NOT NULL,
+                    last_task_at INT NULL,
                     last_probe_at INT NULL,
                     created_at INT DEFAULT EXTRACT(EPOCH FROM NOW())
                 );
@@ -68,8 +71,10 @@ class PgStorage(StorageInterface):
                     CONSTRAINT fk_monitor
                         FOREIGN KEY(fk_monitor)
                             REFERENCES monitors(id)
+                                ON DELETE CASCADE
                 );
                 CREATE INDEX timestamp_idx ON probes (timestamp);
+
             """,
                 (
                     ProbeResponseError.TIMEOUT.value,
@@ -78,18 +83,28 @@ class PgStorage(StorageInterface):
             )
             cur.execute(
                 """
-                CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'done', 'error');
+                CREATE TYPE task_status AS ENUM (%s, %s, %s, %s, %s);
                 CREATE TABLE tasks (
                     id TEXT PRIMARY KEY,
+                    timestamp INT NOT NULL,
                     fk_monitor TEXT NOT NULL,
                     status task_status NOT NULL,
                     locked_at INT NULL,
+                    locked_by TEXT NULL,
+                    completed_at INT NULL,
                     CONSTRAINT fk_monitor
                         FOREIGN KEY(fk_monitor)
                             REFERENCES monitors(id)
                 );
                 CREATE INDEX fk_monitor_idx ON tasks (fk_monitor);
-            """
+            """,
+                (
+                    TaskStatus.PENDING.value,
+                    TaskStatus.RUNNING.value,
+                    TaskStatus.COMPLETED.value,
+                    TaskStatus.ABANDONED.value,
+                    TaskStatus.FAILED.value,
+                ),
             )
             cur.close()
             self.conn.commit()
@@ -126,9 +141,19 @@ class PgStorage(StorageInterface):
             )
         return Monitor(monitor.id, monitor.name, monitor.endpoint, monitor.interval)
 
-    def list_monitors(self):
+    def list_monitors(
+        self, sort: MonitorSortingOrder = MonitorSortingOrder.CREATED_AT_ASC
+    ):
         cur = self.conn.cursor()
-        cur.execute("SELECT id, name, endpoint, interval, last_probe_at FROM monitors")
+
+        sort_postfix_map = {
+            MonitorSortingOrder.CREATED_AT_ASC: "created_at ASC",
+            MonitorSortingOrder.LAST_TASK_AT_DESC: "last_task_at DESC",
+        }
+
+        cur.execute(
+            f"SELECT id, name, endpoint, interval, last_task_at, last_probe_at FROM monitors ORDER BY {sort_postfix_map[sort]}",
+        )
         rows = cur.fetchall()
         cur.close()
         return [Monitor(*row) for row in rows]
@@ -156,11 +181,59 @@ class PgStorage(StorageInterface):
         cur.close()
         return monitor
 
-    def create_task(self, monitor_id: str):
-        pass
+    def create_task(self, task: Task):
+        cur = self.conn.cursor()
+        cur.execute(
+            "INSERT INTO tasks (id, timestamp, fk_monitor, status) VALUES (%s, %s, %s, %s)",
+            (task.id, task.timestamp, task.monitor_id, task.status.value),
+        )
+        cur.execute(
+            """
+            UPDATE monitors SET last_task_at = %s WHERE id = %s
+        """,
+            (task.timestamp, task.monitor_id),
+        )
+        self.conn.commit()
+        cur.close()
+
+    def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            UPDATE tasks SET status = %s, locked_at = EXTRACT(EPOCH FROM NOW()), locked_by = %s
+            WHERE id IN (
+                SELECT id FROM tasks
+                WHERE status = %s
+                ORDER BY timestamp ASC
+                LIMIT %s
+            )
+            RETURNING id, timestamp, fk_monitor, status;
+            """,
+            (TaskStatus.RUNNING.value, worker_id, TaskStatus.PENDING.value, batch_size),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        self.conn.commit()
+        return [Task(*row) for row in rows]
+
+    def update_task(self, task: Task):
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            UPDATE tasks SET
+                status = %s,
+                completed_at = %s
+            WHERE id = %s
+            """,
+            (task.probe_id, task.status.value, task.completed_at, task.id),
+        )
+        self.conn.commit()
+        cur.close()
 
     def record_probe(self, probe):
         cur = self.conn.cursor()
+
+        # record probe data
         cur.execute(
             """
             INSERT INTO probes (id, timestamp, fk_monitor, response_time, response_code, response_error, content_match)
@@ -176,11 +249,21 @@ class PgStorage(StorageInterface):
                 probe.content_match,
             ),
         )
+
+        # update last probe timestamp on monitor
         cur.execute(
             """
             UPDATE monitors SET last_probe_at = %s WHERE id = %s
         """,
             (probe.timestamp, probe.monitor_id),
+        )
+
+        # recording a probe means the task is completed
+        cur.execute(
+            """
+            UPDATE tasks SET status = %s WHERE id = %s
+        """,
+            (TaskStatus.COMPLETED.value, probe.task_id),
         )
         self.conn.commit()
         cur.close()

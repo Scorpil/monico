@@ -15,12 +15,13 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 
 ## Setup and Configuration
 
-Monic is simple by design. The only piece of information Monic needs to run is the PostgreSQL connection string.
+Monic is simple by design. The only non-optional piece of information Monic needs to run is the PostgreSQL connection string.
 The connection string can be specified either through the environment variable `MONIC_POSTGRES_URI` or through the value `POSTGRES_URI` in the `~/.monic.toml` config file.
 
 ```
 # example ~/.monic.toml
 POSTGRES_URI="postgres://user:pwd@host:5432/monic"
+LOG_LEVEL="INFO"
 ```
 
 TODO: configuration example

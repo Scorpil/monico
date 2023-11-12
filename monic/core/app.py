@@ -4,17 +4,21 @@ This class is responsible for managing the whole application execution,
 dependency injection, etc.
 """
 import asyncio
+import logging
 from typing import Optional
 from monic.core.monitor import Monitor
 from monic.core.storage import StorageInterface
 from monic.core.manager import Manager
+from monic.core.worker import Worker
 
 
 class App:
     storage: StorageInterface
+    log: logging.Logger
 
-    def __init__(self, storage: StorageInterface):
+    def __init__(self, storage: StorageInterface, log: logging.Logger):
         self.storage = storage
+        self.log = log
 
     def setup(self, force=False):
         """Initializes the application"""
@@ -36,8 +40,12 @@ class App:
         return self.storage.delete_monitor(mid)
 
     def run_manager(self):
-        """Starts the monitor manager"""
-        asyncio.run(Manager(self.storage).run())
+        """Starts the manager process responsible for scheduling probes"""
+        asyncio.run(Manager(self.storage, self.log).run())
+
+    def run_worker(self, worker_id: Optional[str] = None):
+        """Starts the worker process responsible for executing probes"""
+        asyncio.run(Worker(self.storage, self.log, worker_id).run())
 
     def shutdown(self):
         """Shuts down the application"""
