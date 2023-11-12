@@ -7,10 +7,8 @@ from monic.core.monitor import Monitor
 
 
 @click.command()
-@click.option("--id", help="ID of the monitor", default=None)
-def delete(id):
-    """Lists configured monitors."""
+def run_manager():
+    """Starts the manager process."""
     app = build_app()
-    monitors = adapt(lambda: app.delete_monitor(id))
+    adapt(lambda: app.run_manager())
     app.shutdown()
-    click.echo(f"Removed monitor {id}")

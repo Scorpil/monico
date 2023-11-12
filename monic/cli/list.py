@@ -30,4 +30,5 @@ def list_monitors():  # `list` is a reserved keyword in Python
     """Lists configured monitors."""
     app = build_app()
     monitors = adapt(lambda: app.list_monitors())
+    app.shutdown()
     print_monitors(monitors)

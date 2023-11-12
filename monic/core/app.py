@@ -3,9 +3,11 @@ This module contains the main application class.
 This class is responsible for managing the whole application execution,
 dependency injection, etc.
 """
+import asyncio
 from typing import Optional
 from monic.core.monitor import Monitor
 from monic.core.storage import StorageInterface
+from monic.core.manager import Manager
 
 
 class App:
@@ -32,3 +34,11 @@ class App:
     def delete_monitor(self, mid: str) -> Monitor:
         """Removes a monitor"""
         return self.storage.delete_monitor(mid)
+
+    def run_manager(self):
+        """Starts the monitor manager"""
+        asyncio.run(Manager(self.storage).run())
+
+    def shutdown(self):
+        """Shuts down the application"""
+        self.storage.disconnect()

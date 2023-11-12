@@ -15,4 +15,5 @@ def setup(force=False):
     """Initializes the database"""
     app = build_app()
     adapt(lambda: app.setup(force=force))
+    app.shutdown()
     click.echo("Initialized the database")

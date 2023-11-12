@@ -29,6 +29,10 @@ class StorageInterface(ABC):
         """Connects to the storage backend"""
         pass
 
+    def disconnect(self):
+        """Disconnects from the storage backend. Clean up resources."""
+        pass
+
     def setup(self):
         """Sets up the storage backend, e.g. creates tables"""
         pass
@@ -60,4 +64,14 @@ class StorageInterface(ABC):
     @abstractmethod
     def delete_monitor(self, id: str):
         """Deletes a monitor by ID"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_task(self, task):
+        """Creates a new task"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def record_probe(self, probe):
+        """Records the probe"""
         raise NotImplementedError

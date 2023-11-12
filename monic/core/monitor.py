@@ -1,6 +1,8 @@
 import re
 from typing import Optional
+from typing import Optional
 from monic.utils import is_valid_url
+from monic.core.probe import ProbeResponseError, Probe
 
 
 class MonitorAttributeError(ValueError):
@@ -20,6 +22,17 @@ class Monitor:
         self.name = self.preprocess_name(name)
         self.endpoint = self.preprocess_endpoint(endpoint)
         self.interval = self.preprocess_interval(interval)
+
+    def new_probe(
+        self,
+        response_time: Optional[float],
+        response_code: Optional[int],
+        response_error: Optional[ProbeResponseError],
+        content_match: Optional[str],
+    ):
+        return Probe(
+            self.id, response_time, response_code, response_error, content_match
+        )
 
     @staticmethod
     def preprocess_id(value: str):

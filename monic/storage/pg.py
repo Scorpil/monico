@@ -7,6 +7,7 @@ from monic.core.storage import (
     MonitorNotFoundException,
 )
 from monic.core.monitor import Monitor
+from monic.core.probe import ProbeResponseError
 
 
 class PgStorage(StorageInterface):
@@ -30,6 +31,9 @@ class PgStorage(StorageInterface):
         # TODO: DEBUG Log version
         cur.close()
 
+    def disconnect(self):
+        self.conn.close()
+
     def setup(self, force=False):
         if force:
             self.teardown()
@@ -37,7 +41,55 @@ class PgStorage(StorageInterface):
         cur = self.conn.cursor()
         try:
             cur.execute(
-                "CREATE TABLE monitors (id TEXT PRIMARY KEY, name TEXT, endpoint TEXT, interval INT)"
+                """
+                CREATE TABLE monitors (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    endpoint TEXT NOT NULL,
+                    interval INT NOT NULL,
+                    last_probe_at INT NULL,
+                    created_at INT DEFAULT EXTRACT(EPOCH FROM NOW())
+                );
+                CREATE INDEX last_probe_at_idx ON monitors (last_probe_at);
+                CREATE INDEX created_at_idx ON monitors (created_at);
+            """
+            )
+            cur.execute(
+                """
+                CREATE TYPE probe_response_error AS ENUM (%s, %s);
+                CREATE TABLE probes (
+                    id TEXT PRIMARY KEY,
+                    timestamp INT NOT NULL,
+                    fk_monitor TEXT NOT NULL,
+                    response_time FLOAT NULL,
+                    response_code INT NULL,
+                    response_error probe_response_error NULL,
+                    content_match TEXT NULL,
+                    CONSTRAINT fk_monitor
+                        FOREIGN KEY(fk_monitor)
+                            REFERENCES monitors(id)
+                );
+                CREATE INDEX timestamp_idx ON probes (timestamp);
+            """,
+                (
+                    ProbeResponseError.TIMEOUT.value,
+                    ProbeResponseError.CONNECTION_ERROR.value,
+                ),
+            )
+            cur.execute(
+                """
+                CREATE TYPE task_status AS ENUM ('pending', 'in_progress', 'done', 'error');
+                CREATE TABLE tasks (
+                    id TEXT PRIMARY KEY,
+                    fk_monitor TEXT NOT NULL,
+                    status task_status NOT NULL,
+                    locked_at INT NULL,
+                    CONSTRAINT fk_monitor
+                        FOREIGN KEY(fk_monitor)
+                            REFERENCES monitors(id)
+                );
+                CREATE INDEX fk_monitor_idx ON tasks (fk_monitor);
+            """
             )
             cur.close()
             self.conn.commit()
@@ -46,7 +98,15 @@ class PgStorage(StorageInterface):
 
     def teardown(self):
         cur = self.conn.cursor()
-        cur.execute("DROP TABLE IF EXISTS monitors")
+        cur.execute(
+            """
+            DROP TABLE IF EXISTS tasks;
+            DROP TYPE IF EXISTS task_status;
+            DROP TABLE IF EXISTS probes;
+            DROP TYPE IF EXISTS probe_response_error;
+            DROP TABLE IF EXISTS monitors;
+        """
+        )
         cur.close()
         self.conn.commit()
 
@@ -68,7 +128,7 @@ class PgStorage(StorageInterface):
 
     def list_monitors(self):
         cur = self.conn.cursor()
-        cur.execute("SELECT id, name, endpoint, interval FROM monitors")
+        cur.execute("SELECT id, name, endpoint, interval, last_probe_at FROM monitors")
         rows = cur.fetchall()
         cur.close()
         return [Monitor(*row) for row in rows]
@@ -95,3 +155,32 @@ class PgStorage(StorageInterface):
         self.conn.commit()
         cur.close()
         return monitor
+
+    def create_task(self, monitor_id: str):
+        pass
+
+    def record_probe(self, probe):
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO probes (id, timestamp, fk_monitor, response_time, response_code, response_error, content_match)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """,
+            (
+                probe.id,
+                probe.timestamp,
+                probe.monitor_id,
+                probe.response_time,
+                probe.response_code,
+                probe.response_error,
+                probe.content_match,
+            ),
+        )
+        cur.execute(
+            """
+            UPDATE monitors SET last_probe_at = %s WHERE id = %s
+        """,
+            (probe.timestamp, probe.monitor_id),
+        )
+        self.conn.commit()
+        cur.close()

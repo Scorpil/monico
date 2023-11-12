@@ -12,6 +12,7 @@ def create(id, name, endpoint, interval):
     """Creates a new monitor"""
     app = build_app()
     monitor = adapt(lambda: app.create_monitor(id, name, endpoint, interval))
+    app.shutdown()
     click.echo(
         f'Added monitor {monitor.name} for "{monitor.endpoint}" every {monitor.interval} seconds'
     )
