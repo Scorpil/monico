@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import uuid
 import psycopg2
 from monic.core.storage import (
@@ -9,8 +10,14 @@ from monic.core.storage import (
 )
 from monic.core.monitor import Monitor
 from monic.core.task import Task, TaskStatus
-from monic.core.probe import ProbeResponseError
+from monic.core.probe import Probe, ProbeResponseError
 
+
+@dataclass
+class TableConfig:
+    monitors: str
+    tasks: str
+    probes: str
 
 class PgStorage(StorageInterface):
     """
@@ -18,10 +25,17 @@ class PgStorage(StorageInterface):
     Used for testing to avoid database dependencies.
     """
 
+    tables: dict
     service_uri: str
     conn: psycopg2.extensions.connection
 
-    def __init__(self, service_uri: str):
+    def __init__(self, service_uri: str, prefix: str = "monic"):
+
+        self.tables = TableConfig(
+            monitors=prefix + "_monitors",
+            tasks=prefix + "_tasks",
+            probes=prefix + "_probes",
+        )
         self.service_uri = service_uri
 
     def connect(self):
@@ -43,48 +57,25 @@ class PgStorage(StorageInterface):
         cur = self.conn.cursor()
         try:
             cur.execute(
-                """
-                CREATE TABLE monitors (
+                f"""
+                CREATE TABLE {self.tables.monitors} (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     endpoint TEXT NOT NULL,
                     interval INT NOT NULL,
+                    body_regexp TEXT NULL,
                     last_task_at INT NULL,
                     last_probe_at INT NULL,
                     created_at INT DEFAULT EXTRACT(EPOCH FROM NOW())
                 );
-                CREATE INDEX last_probe_at_idx ON monitors (last_probe_at);
-                CREATE INDEX created_at_idx ON monitors (created_at);
+                CREATE INDEX {self.tables.monitors}_last_probe_at_idx ON {self.tables.monitors} (last_probe_at);
+                CREATE INDEX {self.tables.monitors}_created_at_idx ON {self.tables.monitors} (created_at);
             """
             )
             cur.execute(
-                """
-                CREATE TYPE probe_response_error AS ENUM (%s, %s);
-                CREATE TABLE probes (
-                    id TEXT PRIMARY KEY,
-                    timestamp INT NOT NULL,
-                    fk_monitor TEXT NOT NULL,
-                    response_time FLOAT NULL,
-                    response_code INT NULL,
-                    response_error probe_response_error NULL,
-                    content_match TEXT NULL,
-                    CONSTRAINT fk_monitor
-                        FOREIGN KEY(fk_monitor)
-                            REFERENCES monitors(id)
-                                ON DELETE CASCADE
-                );
-                CREATE INDEX timestamp_idx ON probes (timestamp);
-
-            """,
-                (
-                    ProbeResponseError.TIMEOUT.value,
-                    ProbeResponseError.CONNECTION_ERROR.value,
-                ),
-            )
-            cur.execute(
-                """
-                CREATE TYPE task_status AS ENUM (%s, %s, %s, %s, %s);
-                CREATE TABLE tasks (
+                f"""
+                CREATE TYPE {self.tables.tasks}_status AS ENUM (%s, %s, %s, %s, %s);
+                CREATE TABLE {self.tables.tasks} (
                     id TEXT PRIMARY KEY,
                     timestamp INT NOT NULL,
                     fk_monitor TEXT NOT NULL,
@@ -94,9 +85,9 @@ class PgStorage(StorageInterface):
                     completed_at INT NULL,
                     CONSTRAINT fk_monitor
                         FOREIGN KEY(fk_monitor)
-                            REFERENCES monitors(id)
+                            REFERENCES {self.tables.monitors}(id) ON DELETE CASCADE
                 );
-                CREATE INDEX fk_monitor_idx ON tasks (fk_monitor);
+                CREATE INDEX {self.tables.tasks}_fk_monitor_idx ON {self.tables.tasks} (fk_monitor);
             """,
                 (
                     TaskStatus.PENDING.value,
@@ -106,21 +97,51 @@ class PgStorage(StorageInterface):
                     TaskStatus.FAILED.value,
                 ),
             )
+            cur.execute(
+                f"""
+                CREATE TYPE {self.tables.probes}_response_error AS ENUM (%s, %s);
+                CREATE TABLE {self.tables.probes} (
+                    id TEXT PRIMARY KEY,
+                    timestamp INT NOT NULL,
+                    fk_monitor TEXT NOT NULL,
+                    fk_task TEXT NULL,
+                    response_time FLOAT NULL,
+                    response_code INT NULL,
+                    response_error probe_response_error NULL,
+                    content_match TEXT NULL,
+                    CONSTRAINT fk_monitor
+                        FOREIGN KEY(fk_monitor)
+                            REFERENCES {self.tables.monitors}(id)
+                                ON DELETE CASCADE,
+                    CONSTRAINT fk_task
+                        FOREIGN KEY(fk_task)
+                            REFERENCES {self.tables.tasks}(id)
+                                ON DELETE SET NULL
+                );
+                CREATE INDEX {self.tables.probes}_timestamp_idx ON {self.tables.probes} (timestamp);
+                CREATE INDEX {self.tables.probes}_fk_monitor_idx ON {self.tables.probes} (fk_monitor);
+            """,
+                (
+                    ProbeResponseError.TIMEOUT.value,
+                    ProbeResponseError.CONNECTION_ERROR.value,
+                ),
+            )
             cur.close()
             self.conn.commit()
-        except psycopg2.errors.DuplicateTable:
+        except psycopg2.errors.DuplicateTable as e:
+            self.conn.rollback()
             raise StorageSetupException("Storage already initialized")
 
     def teardown(self):
         cur = self.conn.cursor()
         cur.execute(
+            f"""
+            DROP TABLE IF EXISTS {self.tables.probes};
+            DROP TYPE IF EXISTS {self.tables.probes}_response_error;
+            DROP TABLE IF EXISTS {self.tables.tasks};
+            DROP TYPE IF EXISTS {self.tables.tasks}_status;
+            DROP TABLE IF EXISTS {self.tables.monitors};
             """
-            DROP TABLE IF EXISTS tasks;
-            DROP TYPE IF EXISTS task_status;
-            DROP TABLE IF EXISTS probes;
-            DROP TYPE IF EXISTS probe_response_error;
-            DROP TABLE IF EXISTS monitors;
-        """
         )
         cur.close()
         self.conn.commit()
@@ -131,15 +152,28 @@ class PgStorage(StorageInterface):
         cur = self.conn.cursor()
         try:
             cur.execute(
-                "INSERT INTO monitors (id, name, endpoint, interval) VALUES (%s, %s, %s, %s)",
-                (monitor.id, monitor.name, monitor.endpoint, monitor.interval),
+                f"INSERT INTO {self.tables.monitors} (id, name, endpoint, interval, body_regexp) VALUES (%s, %s, %s, %s, %s)",
+                (
+                    monitor.id,
+                    monitor.name,
+                    monitor.endpoint,
+                    monitor.interval,
+                    monitor.body_regexp,
+                ),
             )
             self.conn.commit()
         except psycopg2.errors.UniqueViolation:
+            self.conn.rollback()
             raise MonitorAlreadyExistsException(
                 f'Monitor with ID "{monitor.id}" already exists'
             )
-        return Monitor(monitor.id, monitor.name, monitor.endpoint, monitor.interval)
+        return Monitor(
+            monitor.id,
+            monitor.name,
+            monitor.endpoint,
+            monitor.interval,
+            monitor.body_regexp,
+        )
 
     def list_monitors(
         self, sort: MonitorSortingOrder = MonitorSortingOrder.CREATED_AT_ASC
@@ -152,7 +186,7 @@ class PgStorage(StorageInterface):
         }
 
         cur.execute(
-            f"SELECT id, name, endpoint, interval, last_task_at, last_probe_at FROM monitors ORDER BY {sort_postfix_map[sort]}",
+            f"SELECT id, name, endpoint, interval, body_regexp, last_task_at, last_probe_at FROM {self.tables.monitors} ORDER BY {sort_postfix_map[sort]}",
         )
         rows = cur.fetchall()
         cur.close()
@@ -161,7 +195,8 @@ class PgStorage(StorageInterface):
     def read_monitor(self, id):
         cur = self.conn.cursor()
         cur.execute(
-            "SELECT id, name, endpoint, interval FROM monitors WHERE id = %s", (id,)
+            f"SELECT id, name, endpoint, interval, body_regexp, last_task_at, last_probe_at FROM {self.tables.monitors} WHERE id = %s",
+            (id,),
         )
         row = cur.fetchone()
         if not row:
@@ -169,14 +204,10 @@ class PgStorage(StorageInterface):
         cur.close()
         return Monitor(*row)
 
-    def update_monitor(self, monitor):
-        self.monitors[monitor.id] = monitor
-        return monitor
-
     def delete_monitor(self, id):
         cur = self.conn.cursor()
         monitor = self.read_monitor(id)
-        cur.execute("DELETE FROM monitors WHERE id = %s", (id,))
+        cur.execute(f"DELETE FROM {self.tables.monitors} WHERE id = %s", (id,))
         self.conn.commit()
         cur.close()
         return monitor
@@ -184,12 +215,12 @@ class PgStorage(StorageInterface):
     def create_task(self, task: Task):
         cur = self.conn.cursor()
         cur.execute(
-            "INSERT INTO tasks (id, timestamp, fk_monitor, status) VALUES (%s, %s, %s, %s)",
+            f"INSERT INTO {self.tables.tasks} (id, timestamp, fk_monitor, status) VALUES (%s, %s, %s, %s)",
             (task.id, task.timestamp, task.monitor_id, task.status.value),
         )
         cur.execute(
-            """
-            UPDATE monitors SET last_task_at = %s WHERE id = %s
+            f"""
+            UPDATE {self.tables.monitors} SET last_task_at = %s WHERE id = %s
         """,
             (task.timestamp, task.monitor_id),
         )
@@ -199,10 +230,10 @@ class PgStorage(StorageInterface):
     def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
         cur = self.conn.cursor()
         cur.execute(
-            """
-            UPDATE tasks SET status = %s, locked_at = EXTRACT(EPOCH FROM NOW()), locked_by = %s
+            f"""
+            UPDATE {self.tables.tasks} SET status = %s, locked_at = EXTRACT(EPOCH FROM NOW()), locked_by = %s
             WHERE id IN (
-                SELECT id FROM tasks
+                SELECT id FROM {self.tables.tasks}
                 WHERE status = %s
                 ORDER BY timestamp ASC
                 LIMIT %s
@@ -219,8 +250,8 @@ class PgStorage(StorageInterface):
     def update_task(self, task: Task):
         cur = self.conn.cursor()
         cur.execute(
-            """
-            UPDATE tasks SET
+            f"""
+            UPDATE {self.tables.tasks} SET
                 status = %s,
                 completed_at = %s
             WHERE id = %s
@@ -235,14 +266,15 @@ class PgStorage(StorageInterface):
 
         # record probe data
         cur.execute(
-            """
-            INSERT INTO probes (id, timestamp, fk_monitor, response_time, response_code, response_error, content_match)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            f"""
+            INSERT INTO {self.tables.probes} (id, timestamp, fk_monitor, fk_task, response_time, response_code, response_error, content_match)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """,
             (
                 probe.id,
                 probe.timestamp,
                 probe.monitor_id,
+                probe.task_id,
                 probe.response_time,
                 probe.response_code,
                 probe.response_error,
@@ -252,18 +284,34 @@ class PgStorage(StorageInterface):
 
         # update last probe timestamp on monitor
         cur.execute(
-            """
-            UPDATE monitors SET last_probe_at = %s WHERE id = %s
+            f"""
+            UPDATE {self.tables.monitors} SET last_probe_at = %s WHERE id = %s
         """,
             (probe.timestamp, probe.monitor_id),
         )
 
         # recording a probe means the task is completed
         cur.execute(
-            """
-            UPDATE tasks SET status = %s WHERE id = %s
+            f"""
+            UPDATE {self.tables.tasks} SET status = %s WHERE id = %s
         """,
             (TaskStatus.COMPLETED.value, probe.task_id),
         )
         self.conn.commit()
         cur.close()
+
+    def list_probes(self, monitor_id: str, limit: int = 10) -> [Probe]:
+        cur = self.conn.cursor()
+        cur.execute(
+            f"""
+            SELECT id, timestamp, fk_monitor, fk_task, response_time, response_code, response_error, content_match
+            FROM {self.tables.probes}
+            WHERE fk_monitor = %s
+            ORDER BY timestamp DESC
+            LIMIT %s
+        """,
+            (monitor_id, limit),
+        )
+        rows = cur.fetchall()
+        cur.close()
+        return [Probe(*row) for row in rows]

@@ -15,6 +15,7 @@ class Monitor:
     name: str
     endpoint: str
     interval: int
+    body_regexp: Optional[str]
     last_task_at: Optional[int]
     last_probe_at: Optional[int]
 
@@ -24,26 +25,17 @@ class Monitor:
         name: str,
         endpoint: str,
         interval: int = 60,
+        body_regexp: Optional[str] = None,
         last_task_at: Optional[int] = None,
         last_probe_at: Optional[int] = None,
     ):
         self.id = self.preprocess_id(mid) if mid else None
         self.name = self.preprocess_name(name)
         self.endpoint = self.preprocess_endpoint(endpoint)
+        self.body_regexp = self.preprocess_body_regexp(body_regexp)
         self.interval = self.preprocess_interval(interval)
         self.last_task_at = last_task_at
         self.last_probe_at = last_probe_at
-
-    def new_probe(
-        self,
-        response_time: Optional[float],
-        response_code: Optional[int],
-        response_error: Optional[ProbeResponseError],
-        content_match: Optional[str],
-    ):
-        return Probe(
-            self.id, response_time, response_code, response_error, content_match
-        )
 
     def new_task(self):
         return Task.create(self.id)
@@ -52,15 +44,15 @@ class Monitor:
         return f"<Monitor {self.id} ({self.name})>"
 
     @staticmethod
-    def preprocess_id(value: str):
-        if not re.match(r"^[A-Za-z0-9_-]+$", value):
+    def preprocess_id(value: str) -> str:
+        if not re.match(r"^[A-Za-z0-9_-]{1,128}$", value):
             raise MonitorAttributeError(
                 f"Monitor ID can only contain alphanumeric characters, underscores and dashes. Got {value}"
             )
         return value
 
     @staticmethod
-    def preprocess_name(value: str):
+    def preprocess_name(value: str) -> str:
         if not value:
             raise MonitorAttributeError("Name cannot be empty")
         if len(value) > 64:
@@ -68,7 +60,7 @@ class Monitor:
         return value
 
     @staticmethod
-    def preprocess_endpoint(value: str):
+    def preprocess_endpoint(value: str) -> str:
         """
         Endpoint must be a valid URL.
         """
@@ -84,10 +76,20 @@ class Monitor:
         return value.lower()
 
     @staticmethod
-    def preprocess_interval(value: int):
+    def preprocess_interval(value: int) -> int:
         """Interval must be between 5 and 300 seconds"""
         if value < 5:
             raise MonitorAttributeError("Interval must be at least 5 seconds")
         if value > 300:
             raise MonitorAttributeError("Interval must be at most 300 seconds")
+        return value
+
+    @staticmethod
+    def preprocess_body_regexp(value: Optional[str]) -> str:
+        if value is None:
+            return value
+        try:
+            re.compile(value)
+        except re.error:
+            raise MonitorAttributeError("Invalid body regular expression")
         return value

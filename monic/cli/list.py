@@ -1,4 +1,5 @@
 import click
+from rich.markup import escape
 from rich.console import Console
 from rich.table import Table
 from monic.bootstrap import build_app
@@ -17,10 +18,10 @@ def print_monitors(monitors: [Monitor]):
     table.add_column("Interval")
     for monitor in monitors:
         table.add_row(
-            monitor.id,
-            monitor.name,
-            monitor.endpoint,
-            seconds_to_human_readable_string(monitor.interval),
+            escape(monitor.id),
+            escape(monitor.name),
+            escape(monitor.endpoint),
+            escape(seconds_to_human_readable_string(monitor.interval)),
         )
     console.print(table)
 

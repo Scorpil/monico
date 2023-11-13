@@ -15,17 +15,15 @@ class MemStorage(StorageInterface):
     def create_monitor(self, monitor):
         id = uuid.uuid4().hex
         self.monitors[monitor.id] = monitor
-        return Monitor(id, monitor.name, monitor.endpoint, monitor.interval)
+        return Monitor(
+            id, monitor.name, monitor.endpoint, monitor.interval, monitor.body_regexp
+        )
 
     def list_monitors(self):
         return list(self.monitors.values())
 
     def read_monitor(self, id):
         return self.monitors[id]
-
-    def update_monitor(self, monitor):
-        self.monitors[monitor.id] = monitor
-        return monitor
 
     def delete_monitor(self, id):
         del self.monitors[id]

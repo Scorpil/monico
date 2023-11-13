@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 import time
@@ -9,6 +10,7 @@ class ProbeResponseError(Enum):
     CONNECTION_ERROR = "connection_error"
 
 
+@dataclass
 class Probe:
     id: str
     timestamp: int
@@ -19,8 +21,8 @@ class Probe:
     response_error: str
     content_match: str
 
-    def __init__(
-        self,
+    @staticmethod
+    def create(
         monitor_id: str,
         task_id: str,
         response_time: Optional[float],
@@ -28,11 +30,13 @@ class Probe:
         response_error: Optional[ProbeResponseError],
         content_match: Optional[str],
     ):
-        self.id = str(uuid.uuid4())
-        self.monitor_id = monitor_id
-        self.task_id = task_id
-        self.timestamp = int(time.time())
-        self.response_time = response_time
-        self.response_code = response_code
-        self.response_error = response_error
-        self.content_match = content_match
+        return Probe(
+            id=str(uuid.uuid4()),
+            monitor_id=monitor_id,
+            task_id=task_id,
+            timestamp=int(time.time()),
+            response_time=response_time,
+            response_code=response_code,
+            response_error=response_error,
+            content_match=content_match,
+        )

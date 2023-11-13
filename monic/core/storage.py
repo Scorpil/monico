@@ -4,6 +4,7 @@ Defines an abstract storage class for storing monic data.
 from enum import Enum
 from abc import ABC, abstractmethod
 from monic.core.monitor import Monitor
+from monic.core.probe import Probe
 from monic.core.task import Task
 
 
@@ -68,11 +69,6 @@ class StorageInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_monitor(self, monitor: Monitor) -> Monitor:
-        """Updates a monitor"""
-        raise NotImplementedError
-
-    @abstractmethod
     def delete_monitor(self, id: str):
         """Deletes a monitor by ID"""
         raise NotImplementedError
@@ -95,4 +91,9 @@ class StorageInterface(ABC):
     @abstractmethod
     def record_probe(self, probe):
         """Records the probe"""
+        raise NotImplementedError
+
+    @abstractmethod
+    def list_probes(self, monitor_id: str, limit: int = 10) -> [Probe]:
+        """Lists probes for a monitor"""
         raise NotImplementedError

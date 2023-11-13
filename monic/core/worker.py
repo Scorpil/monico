@@ -1,3 +1,4 @@
+import re
 import time
 import asyncio
 import logging
@@ -85,17 +86,23 @@ class Worker:
             try:
                 async with session.get(monitor.endpoint) as response:
                     request_time = asyncio.get_event_loop().time() - start
-                    return Probe(
+                    response_text = await response.text()
+
+                    match_str = None
+                    if monitor.body_regexp:
+                        match = re.search(monitor.body_regexp, response_text)
+                        match_str = match.group(0) if match else None
+                    return Probe.create(
                         monitor_id=task.monitor_id,
                         task_id=task.id,
                         response_time=request_time,
                         response_code=response.status,
                         response_error=None,
-                        content_match=None,
+                        content_match=match_str,
                     )
             except aiohttp.ClientError as e:
                 request_time = asyncio.get_event_loop().time() - start
-                return Probe(
+                return Probe.create(
                     monitor_id=task.monitor_id,
                     task_id=task.id,
                     response_time=request_time,
@@ -105,7 +112,7 @@ class Worker:
                 )
             except asyncio.TimeoutError:
                 request_time = asyncio.get_event_loop().time() - start
-                return Probe(
+                return Probe.create(
                     monitor_id=task.monitor_id,
                     task_id=task.id,
                     response_time=request_time,

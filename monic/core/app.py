@@ -10,6 +10,7 @@ from monic.core.monitor import Monitor
 from monic.core.storage import StorageInterface
 from monic.core.manager import Manager
 from monic.core.worker import Worker
+from monic.core.probe import Probe
 
 
 class App:
@@ -24,11 +25,22 @@ class App:
         """Initializes the application"""
         self.storage.setup(force)
 
+    def status(self, mid: str, limit_probes=10) -> (Monitor, [Probe]):
+        """Checks the status of the monitor: returns the monitor and the list of most recent probes"""
+        monitor = self.storage.read_monitor(mid)
+        probes = self.storage.list_probes(mid, limit=limit_probes)
+        return monitor, probes
+
     def create_monitor(
-        self, mid: str, name: str, endpoint: str, interval: Optional[int]
+        self,
+        mid: str,
+        name: str,
+        endpoint: str,
+        interval: Optional[int],
+        body_regexp: Optional[str],
     ) -> Monitor:
         """Creates a new monitor"""
-        monitor = Monitor(mid, name, endpoint, interval)
+        monitor = Monitor(mid, name, endpoint, interval, body_regexp)
         return self.storage.create_monitor(monitor)
 
     def list_monitors(self) -> [Monitor]:
