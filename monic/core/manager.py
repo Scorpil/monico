@@ -6,6 +6,8 @@ from monic.core.monitor import Monitor
 
 
 class Manager:
+    MIN_WAIT_TIME = 5  # seconds to wait between scheduling tasks
+
     storage: StorageInterface
     log: logging.Logger
 
@@ -15,12 +17,13 @@ class Manager:
 
     def issue_task(self, monitor: Monitor):
         self.log.debug(f"issuing task for monitor {monitor.id}")
-        self.storage.create_task(monitor.new_task())
+        self.storage.create_task(monitor.create_task())
 
     async def schedule(self):
         """
         Loops over all monitors and schedules a task if necessary.
         """
+        print("sdbg schedule")
         now = int(time.time())
         monitors = self.storage.list_monitors(
             sort=MonitorSortingOrder.LAST_TASK_AT_DESC
@@ -54,8 +57,13 @@ class Manager:
         self.log.info(f"manager started")
 
         while True:
-            tasks = [
-                self.schedule(),
-                asyncio.sleep(5),  # wait minimum of 5 seconds before scheduling again
-            ]
-            await asyncio.gather(*tasks)
+            try:
+                await asyncio.gather(
+                    asyncio.sleep(self.MIN_WAIT_TIME),
+                    self.schedule(),
+                )
+            except Exception as e:
+                self.log.error(f"manager encountered an unexpected exception: {e}")
+            except asyncio.CancelledError:
+                self.log.info("manager process has been cancelled")
+                break

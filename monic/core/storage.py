@@ -36,19 +36,19 @@ class MonitorSortingOrder(Enum):
 
 class StorageInterface(ABC):
     def connect(self):
-        """Connects to the storage backend"""
+        """Connects to the storage backend. Does nothing by default."""
         pass
 
     def disconnect(self):
-        """Disconnects from the storage backend. Clean up resources."""
+        """Disconnects from the storage backend. Clean up resources. Does nothing by default."""
         pass
 
     def setup(self):
-        """Sets up the storage backend, e.g. creates tables"""
+        """Sets up the storage backend, e.g. creates tables. Does nothing by default."""
         pass
 
     def teardown(self):
-        """Tears down the storage backend, e.g. deletes tables"""
+        """Tears down the storage backend, e.g. deletes tables. Does nothing by default."""
         pass
 
     @abstractmethod
@@ -80,7 +80,7 @@ class StorageInterface(ABC):
 
     @abstractmethod
     def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
-        """Locks a batch of tasks"""
+        """Locks a batch of tasks."""
         raise NotImplementedError
 
     @abstractmethod

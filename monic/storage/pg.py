@@ -19,6 +19,7 @@ class TableConfig:
     tasks: str
     probes: str
 
+
 class PgStorage(StorageInterface):
     """
     Memory storage implementation for monic.
@@ -30,7 +31,6 @@ class PgStorage(StorageInterface):
     conn: psycopg2.extensions.connection
 
     def __init__(self, service_uri: str, prefix: str = "monic"):
-
         self.tables = TableConfig(
             monitors=prefix + "_monitors",
             tasks=prefix + "_tasks",
@@ -226,6 +226,7 @@ class PgStorage(StorageInterface):
         )
         self.conn.commit()
         cur.close()
+        return task
 
     def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
         cur = self.conn.cursor()
@@ -238,7 +239,7 @@ class PgStorage(StorageInterface):
                 ORDER BY timestamp ASC
                 LIMIT %s
             )
-            RETURNING id, timestamp, fk_monitor, status;
+            RETURNING id, timestamp, fk_monitor, status, locked_at, locked_by, completed_at;
             """,
             (TaskStatus.RUNNING.value, worker_id, TaskStatus.PENDING.value, batch_size),
         )
@@ -256,12 +257,12 @@ class PgStorage(StorageInterface):
                 completed_at = %s
             WHERE id = %s
             """,
-            (task.probe_id, task.status.value, task.completed_at, task.id),
+            (task.status.value, task.completed_at, task.id),
         )
         self.conn.commit()
         cur.close()
 
-    def record_probe(self, probe):
+    def record_probe(self, probe: Probe):
         cur = self.conn.cursor()
 
         # record probe data
@@ -277,7 +278,7 @@ class PgStorage(StorageInterface):
                 probe.task_id,
                 probe.response_time,
                 probe.response_code,
-                probe.response_error,
+                probe.response_error.value if probe.response_error else None,
                 probe.content_match,
             ),
         )

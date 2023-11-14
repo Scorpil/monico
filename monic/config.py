@@ -19,15 +19,16 @@ class Config:
         config.load_from_env()
         return config
 
-    def __init__(self, postgres_uri: Optional[str] = None):
+    def __init__(self, postgres_uri: Optional[str] = None, log_level: str = "WARNING"):
         self.postgres_uri = postgres_uri
+        self.log_level = log_level
 
     def __repr__(self):
         return f"<Config postgres_uri={self.postgres_uri} log_level={self.log_level}>"
 
     def load_from_config_file(self):
         """Builds config from config file"""
-        for location in Config.CONFIG_FILE_LOCATIONS:
+        for location in self.CONFIG_FILE_LOCATIONS:
             try:
                 with open(os.path.expanduser(location)) as f:
                     file_config = toml.load(f)

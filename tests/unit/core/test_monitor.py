@@ -7,8 +7,8 @@ def test_repr():
     assert repr(monitor) == "<Monitor foo (Foo)>"
 
 
-def test_new_task():
-    task = Monitor("foo", "Foo", "https://example.com").new_task()
+def test_create_task():
+    task = Monitor("foo", "Foo", "https://example.com").create_task()
     assert task.monitor_id == "foo"
 
 

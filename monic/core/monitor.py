@@ -37,7 +37,7 @@ class Monitor:
         self.last_task_at = last_task_at
         self.last_probe_at = last_probe_at
 
-    def new_task(self):
+    def create_task(self):
         return Task.create(self.id)
 
     def __repr__(self):

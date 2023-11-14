@@ -14,6 +14,11 @@ from monic.core.probe import Probe
 
 
 class App:
+    """
+    This class is responsible for managing the whole application execution,
+    dependency injection, delegating tasks to the appropriate components, etc.
+    """
+
     storage: StorageInterface
     log: logging.Logger
 

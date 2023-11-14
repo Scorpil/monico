@@ -19,6 +19,8 @@ class Task:
     timestamp: int
     monitor_id: str
     status: TaskStatus
+    locked_at: Optional[int] = None
+    locked_by: Optional[str] = None
     completed_at: Optional[int] = None
 
     @classmethod

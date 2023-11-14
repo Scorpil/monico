@@ -13,8 +13,10 @@ from typing import Optional
 class Worker:
     """Worker process responsible for executing probes"""
 
+    MIN_WAIT_TIME = 5  # seconds to wait between locking batches
+    REQUEST_TIMEOUT = 5  # seconds until a request is considered timed out
+    STALE_THRESHOLD = 600  # seconds until a task is considered stale
     BATCH_SIZE = 10  # number of tasks to lock at once
-    REQUEST_TIMEOUT = 5  # seconds
 
     worker_id: str
     storage: StorageInterface
@@ -46,13 +48,14 @@ class Worker:
             self.log.debug(f"worker has locked a {len(batch)} tasks")
 
             tasks = [self.run_task(task) for task in batch]
-            tasks.append(
-                asyncio.sleep(5)
-            )  # wait minimum of 5 seconds before locking another batch
             try:
-                await asyncio.gather(*tasks)
+                # wait minimum of 5 seconds before locking another batch
+                await asyncio.gather(asyncio.sleep(self.MIN_WAIT_TIME), *tasks)
             except Exception as e:
                 self.log.error(f"worker encountered an unexpected exception: {e}")
+            except asyncio.CancelledError:
+                self.log.info("worker process has been cancelled")
+                break
 
     async def run_task(self, task: Task):
         """Runs a single instance of a task (probe) and records the result"""
@@ -60,9 +63,8 @@ class Worker:
         self.log.debug(f"worker is running a task; task_id={task.id}")
 
         # tasks that are too old are stale and should be abandoned
-        stale_threshold = 600  # 10 minutes
-        if now - task.timestamp > stale_threshold:
-            self.log.warn(f"abandoning a stale task; task_id={task.id}")
+        if now - task.timestamp > self.STALE_THRESHOLD:
+            self.log.warning(f"abandoning a stale task; task_id={task.id}")
             task.abandon()
             self.storage.update_task(task)
             return
@@ -107,7 +109,7 @@ class Worker:
                     task_id=task.id,
                     response_time=request_time,
                     response_code=None,
-                    response_error=ProbeResponseError.CONNECTION_ERROR.value,
+                    response_error=ProbeResponseError.CONNECTION_ERROR,
                     content_match=None,
                 )
             except asyncio.TimeoutError:
@@ -117,6 +119,6 @@ class Worker:
                     task_id=task.id,
                     response_time=request_time,
                     response_code=None,
-                    response_error=ProbeResponseError.TIMEOUT.value,
+                    response_error=ProbeResponseError.TIMEOUT,
                     content_match=None,
                 )

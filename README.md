@@ -15,16 +15,26 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 
 ## Setup and Configuration
 
-Monic is simple by design. The only non-optional piece of information Monic needs to run is the PostgreSQL connection string.
-The connection string can be specified either through the environment variable `MONIC_POSTGRES_URI` or through the value `POSTGRES_URI` in the `~/.monic.toml` config file.
+Monic is simple by design. Monic is configured through config file `.monic.toml` in your home directory or using environment variables. Supported configuration options:
 
+- `postgres_uri` (or env variable `MONIC_POSTGRES_URI`): **required**, connection string to connect to database
+- `log_level` (or env variable `LOG_LEVEL`): optional, controls logging verbicity. Valid values are `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL`. Default is `WARNING`.
+
+Example `~/.monic.toml`
 ```
-# example ~/.monic.toml
-POSTGRES_URI="postgres://user:pwd@host:5432/monic"
-LOG_LEVEL="INFO"
+postgres_uri="postgres://user:pwd@host:5432/monic"
+log_level="INFO"
 ```
 
-TODO: configuration example
+When configuration is set, run `monic setup` to initialize the database. To re-set the database in future use `monic setup -f` (this will destroy all your data!).
+
+## Execution
+
+`monic` consists of two major parts:
+- **Manager** process is only responsible for scheduling tasks (probes). Manager is lightweight so performance-wise it is enough to run a single manager instance at a time. However, it's ok to run multiple manager instances concurrently for redundancy.
+- **Worker** process performs HTTP requests and records results. It is possible to run multiple instances of worker for improved scalability and availability guarantees.
+
+# TODO: describe controls; docker config
 
 ## Known Issues
 
