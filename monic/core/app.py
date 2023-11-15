@@ -58,11 +58,20 @@ class App:
 
     def run_manager(self):
         """Starts the manager process responsible for scheduling probes"""
-        asyncio.run(Manager(self.storage, self.log).run())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(Manager(self.storage, self.log).run())
 
     def run_worker(self, worker_id: Optional[str] = None):
         """Starts the worker process responsible for executing probes"""
-        asyncio.run(Worker(self.storage, self.log, worker_id).run())
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(Worker(self.storage, self.log, worker_id).run())
+    
+    def run(self, worker_id: Optional[str] = None):
+        """Starts both manager and worker processes concurrently."""
+        loop = asyncio.get_event_loop()
+        manager_task = loop.create_task(Manager(self.storage, self.log).run())
+        worker_task = loop.create_task(Worker(self.storage, self.log, worker_id).run())
+        loop.run_until_complete(asyncio.gather(manager_task, worker_task))
 
     def shutdown(self):
         """Shuts down the application"""

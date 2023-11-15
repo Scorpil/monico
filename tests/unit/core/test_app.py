@@ -121,6 +121,13 @@ def test_run_worker(app):
         mock_run.assert_called_once()
 
 
+def test_run(app):
+    with mock.patch.object(Worker, "run") as mock_worker_run:
+        with mock.patch.object(Manager, "run") as mock_manager_run:
+            app.run()
+            mock_worker_run.assert_called_once()
+            mock_manager_run.assert_called_once()
+
 def test_shutdown(app):
     disconnect_called = False
 

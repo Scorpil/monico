@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "monic"
+authors = [
+    {name = "Andrew Savchyn", email = "dev@scorpil.com"},
+]
+description = "Monic is a simple command-line utility for efficiently monitoring and analyzing the availability of websites."
+requires-python = ">=3.11"
+keywords = ["monitoring", "uptime", "networking", "web", "http", "status-check"]
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking :: Monitoring",
+]
+version = "0.1.0"
+dynamic = ["dependencies", "readme"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+readme = {file = ["README.md", "architecture.md"]}
+
+[project.scripts]
+monic = "monic:main"
+
+# ... other project metadata fields as specified in:
+#     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/

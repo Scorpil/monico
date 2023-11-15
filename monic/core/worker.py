@@ -44,7 +44,12 @@ class Worker:
             self.log.debug(
                 f"worker is locking a batch of tasks; batch_size={self.BATCH_SIZE}"
             )
-            batch = self.lock_batch()
+            try:
+                batch = self.lock_batch()
+            except Exception as e:
+                self.log.error(f"worker encountered an unexpected exception while locking: {e}")
+                await asyncio.sleep(self.MIN_WAIT_TIME)
+                continue
             self.log.debug(f"worker has locked a {len(batch)} tasks")
 
             tasks = [self.run_task(task) for task in batch]
@@ -53,6 +58,7 @@ class Worker:
                 await asyncio.gather(asyncio.sleep(self.MIN_WAIT_TIME), *tasks)
             except Exception as e:
                 self.log.error(f"worker encountered an unexpected exception: {e}")
+                continue
             except asyncio.CancelledError:
                 self.log.info("worker process has been cancelled")
                 break

@@ -1,14 +1,14 @@
 import click
-from monic.bootstrap import build_app
-from monic.cli.utils import adapt
+from monic.bootstrap import AppContext
+from monic.cli.utils import adapt_exceptions_for_cli
 from monic.core.monitor import Monitor
 
 
 @click.command()
 @click.option("--id", help="ID of the monitor", default=None)
+@adapt_exceptions_for_cli
 def delete(id):
     """Lists configured monitors."""
-    app = build_app()
-    monitors = adapt(lambda: app.delete_monitor(id))
-    app.shutdown()
+    with AppContext.create() as app:
+        monitors = app.delete_monitor(id)
     click.echo(f"Removed monitor {id}")

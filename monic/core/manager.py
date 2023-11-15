@@ -23,7 +23,6 @@ class Manager:
         """
         Loops over all monitors and schedules a task if necessary.
         """
-        print("sdbg schedule")
         now = int(time.time())
         monitors = self.storage.list_monitors(
             sort=MonitorSortingOrder.LAST_TASK_AT_DESC

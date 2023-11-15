@@ -4,10 +4,11 @@ from monic.core.storage import (
     StorageSetupException,
     MonitorAlreadyExistsException,
     MonitorNotFoundException,
+    StorageConnectionException,
 )
 
 
-def adapt(func):
+def _adapt(func):
     """Adapts monic exceptions to click exceptions for CLI usage"""
     try:
         return func()
@@ -17,5 +18,14 @@ def adapt(func):
         MonitorAlreadyExistsException,
         MonitorNotFoundException,
     ) as e:
-        # MonitorAttributeError is a user facing error, so we can just print it
+        # these are predictable user facing exceptions, so we can just print them
         raise click.ClickException(str(e))
+    except StorageConnectionException as e:
+        raise click.ClickException("Failed to connect to storage backend. Please check your configuration.")
+
+def adapt_exceptions_for_cli(func):
+    def wrapper(*args, **kwargs):
+        return _adapt(lambda: func(*args, **kwargs))
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    return wrapper

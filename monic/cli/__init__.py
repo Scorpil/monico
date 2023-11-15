@@ -6,12 +6,13 @@ from monic.cli.status import status
 from monic.cli.delete import delete
 from monic.cli.run_manager import run_manager
 from monic.cli.run_worker import run_worker
+from monic.cli.run import run
+from monic.cli.version import version
 
 
 @click.group()
 def cli():
     pass
-
 
 cli.add_command(setup)
 cli.add_command(create)
@@ -21,3 +22,5 @@ cli.add_command(delete)
 
 cli.add_command(run_manager)
 cli.add_command(run_worker)
+cli.add_command(run)
+cli.add_command(version)

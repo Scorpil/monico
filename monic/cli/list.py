@@ -2,8 +2,8 @@ import click
 from rich.markup import escape
 from rich.console import Console
 from rich.table import Table
-from monic.bootstrap import build_app
-from monic.cli.utils import adapt
+from monic.bootstrap import AppContext
+from monic.cli.utils import adapt_exceptions_for_cli
 from monic.core.monitor import Monitor
 from monic.utils import seconds_to_human_readable_string
 
@@ -27,9 +27,9 @@ def print_monitors(monitors: [Monitor]):
 
 
 @click.command(name="list")
+@adapt_exceptions_for_cli
 def list_monitors():  # `list` is a reserved keyword in Python
     """Lists configured monitors."""
-    app = build_app()
-    monitors = adapt(lambda: app.list_monitors())
-    app.shutdown()
+    with AppContext.create() as app:
+        monitors = app.list_monitors()
     print_monitors(monitors)

@@ -3,3 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 .coverage
+build/
+dist/
+*.egg-info/

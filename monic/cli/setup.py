@@ -1,9 +1,9 @@
 import click
-from monic.bootstrap import build_app
-from monic.cli.utils import adapt
+from monic.bootstrap import AppContext
+from monic.cli.utils import adapt_exceptions_for_cli
 
 
-@click.command()
+@click.command(name="setup")
 @click.option(
     "-f",
     "--force",
@@ -11,9 +11,9 @@ from monic.cli.utils import adapt
     default=False,
     help="Force reinitialization. DANGER: DESTROYS ALL DATA!",
 )
+@adapt_exceptions_for_cli
 def setup(force=False):
     """Initializes the database"""
-    app = build_app()
-    adapt(lambda: app.setup(force=force))
-    app.shutdown()
+    with AppContext.create() as app:
+        app.setup(force=force)
     click.echo("Initialized the database")

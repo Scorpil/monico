@@ -5,9 +5,9 @@ from monic.cli.utils import adapt_exceptions_for_cli
 
 
 @click.command()
-@click.option("--id", help="Worker ID", default=None, type=str)
+@click.option("-w", "--worker-id", help="Worker ID", default=None, type=str)
 @adapt_exceptions_for_cli
-def run_worker(id: Optional[str]):
-    """Starts the manager process."""
+def run(worker_id: Optional[str]):
+    """Starts both manager and worker processes concurrently."""
     with AppContext.create() as app:
-        app.run_worker(worker_id=id)
+        app.run(worker_id=worker_id)

@@ -4,8 +4,8 @@ import time
 from rich.markup import escape
 from rich.console import Console
 from rich.table import Table
-from monic.bootstrap import build_app
-from monic.cli.utils import adapt
+from monic.bootstrap import AppContext
+from monic.cli.utils import adapt_exceptions_for_cli
 from monic.utils import (
     timestamp_to_human_readable_string,
     seconds_to_human_readable_string,
@@ -60,21 +60,20 @@ def status_table(monitor, probes):
     help="Number of probes to display",
     type=IntRange(min=1, max=100),
 )
+@adapt_exceptions_for_cli
 def status(id, live, number_of_probes):
     """Displays status of a monitor"""
-    app = build_app()
-    if live:
-        status_live(app, id, number_of_probes)
-    else:
-        status_static(app, id, number_of_probes)
+    with AppContext.create() as app:
+        if live:
+            status_live(app, id, number_of_probes)
+        else:
+            status_static(app, id, number_of_probes)
     app.shutdown()
 
 
 def status_static(app, monitor_id, number_of_probes):
     """Displays status of a monitor as a single static output"""
-    monitor, probes = adapt(
-        lambda: app.status(monitor_id, limit_probes=number_of_probes)
-    )
+    monitor, probes = app.status(monitor_id, limit_probes=number_of_probes)
     console = Console()
     console.print(monitor_header_table(monitor))
 
@@ -87,16 +86,12 @@ def status_live(app, monitor_id, number_of_probes):
     console = Console()
     console.print("Press Ctrl+C to exit\n")
 
-    monitor, probes = adapt(
-        lambda: app.status(monitor_id, limit_probes=number_of_probes)
-    )
+    monitor, probes = app.status(monitor_id, limit_probes=number_of_probes)
     console.print(monitor_header_table(monitor))
 
     console.print(f"\nLast {number_of_probes} probes:", style="bold")
     with Live(status_table(monitor, probes)) as live:
         while True:
-            monitor, probes = adapt(
-                lambda: app.status(monitor_id, limit_probes=number_of_probes)
-            )
+            monitor, probes = app.status(monitor_id, limit_probes=number_of_probes)
             live.update(status_table(monitor, probes))
             time.sleep(1)

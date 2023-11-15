@@ -1,6 +1,6 @@
 import click
-from monic.bootstrap import build_app
-from monic.cli.utils import adapt
+from monic.bootstrap import AppContext
+from monic.cli.utils import adapt_exceptions_for_cli
 
 
 @click.command()
@@ -13,13 +13,11 @@ from monic.cli.utils import adapt
     help="Regular expression to match in the response body",
     default=None,
 )
+@adapt_exceptions_for_cli
 def create(id, name, endpoint, interval, body_regexp):
     """Creates a new monitor"""
-    app = build_app()
-    monitor = adapt(
-        lambda: app.create_monitor(id, name, endpoint, interval, body_regexp)
-    )
-    app.shutdown()
+    with AppContext.create() as app:
+        monitor = app.create_monitor(id, name, endpoint, interval, body_regexp)
     click.echo(
         f'Added monitor {monitor.name} for "{monitor.endpoint}" every {monitor.interval} seconds'
     )

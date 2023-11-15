@@ -4,6 +4,7 @@ import psycopg2
 from monic.core.storage import (
     StorageInterface,
     StorageSetupException,
+    StorageConnectionException,
     MonitorAlreadyExistsException,
     MonitorNotFoundException,
     MonitorSortingOrder,
@@ -39,13 +40,18 @@ class PgStorage(StorageInterface):
         self.service_uri = service_uri
 
     def connect(self):
-        self.conn = psycopg2.connect(self.service_uri)
-        query_sql = "SELECT VERSION()"
-        cur = self.conn.cursor()
-        cur.execute(query_sql)
-        version = cur.fetchone()[0]
-        # TODO: DEBUG Log version
-        cur.close()
+        try:
+            self.conn = psycopg2.connect(self.service_uri)
+            query_sql = "SELECT VERSION()"
+            cur = self.conn.cursor()
+            cur.execute(query_sql)
+            version = cur.fetchone()[0]
+            cur.close()
+        except psycopg2.OperationalError as e:
+            raise StorageConnectionException(
+                f"Could not connect to storage backend: {e}"
+            )
+
 
     def disconnect(self):
         self.conn.close()
@@ -68,8 +74,10 @@ class PgStorage(StorageInterface):
                     last_probe_at INT NULL,
                     created_at INT DEFAULT EXTRACT(EPOCH FROM NOW())
                 );
-                CREATE INDEX {self.tables.monitors}_last_probe_at_idx ON {self.tables.monitors} (last_probe_at);
-                CREATE INDEX {self.tables.monitors}_created_at_idx ON {self.tables.monitors} (created_at);
+                CREATE INDEX {self.tables.monitors}_last_probe_at_idx
+                    ON {self.tables.monitors} (last_probe_at);
+                CREATE INDEX {self.tables.monitors}_created_at_idx
+                    ON {self.tables.monitors} (created_at);
             """
             )
             cur.execute(
@@ -87,7 +95,8 @@ class PgStorage(StorageInterface):
                         FOREIGN KEY(fk_monitor)
                             REFERENCES {self.tables.monitors}(id) ON DELETE CASCADE
                 );
-                CREATE INDEX {self.tables.tasks}_fk_monitor_idx ON {self.tables.tasks} (fk_monitor);
+                CREATE INDEX {self.tables.tasks}_fk_monitor_idx
+                    ON {self.tables.tasks} (fk_monitor);
             """,
                 (
                     TaskStatus.PENDING.value,
@@ -118,8 +127,10 @@ class PgStorage(StorageInterface):
                             REFERENCES {self.tables.tasks}(id)
                                 ON DELETE SET NULL
                 );
-                CREATE INDEX {self.tables.probes}_timestamp_idx ON {self.tables.probes} (timestamp);
-                CREATE INDEX {self.tables.probes}_fk_monitor_idx ON {self.tables.probes} (fk_monitor);
+                CREATE INDEX {self.tables.probes}_timestamp_idx
+                    ON {self.tables.probes} (timestamp);
+                CREATE INDEX {self.tables.probes}_fk_monitor_idx
+                    ON {self.tables.probes} (fk_monitor);
             """,
                 (
                     ProbeResponseError.TIMEOUT.value,
@@ -162,18 +173,23 @@ class PgStorage(StorageInterface):
                 ),
             )
             self.conn.commit()
+            return Monitor(
+                monitor.id,
+                monitor.name,
+                monitor.endpoint,
+                monitor.interval,
+                monitor.body_regexp,
+            )
         except psycopg2.errors.UniqueViolation:
             self.conn.rollback()
             raise MonitorAlreadyExistsException(
                 f'Monitor with ID "{monitor.id}" already exists'
             )
-        return Monitor(
-            monitor.id,
-            monitor.name,
-            monitor.endpoint,
-            monitor.interval,
-            monitor.body_regexp,
-        )
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def list_monitors(
         self, sort: MonitorSortingOrder = MonitorSortingOrder.CREATED_AT_ASC
@@ -206,100 +222,123 @@ class PgStorage(StorageInterface):
 
     def delete_monitor(self, id):
         cur = self.conn.cursor()
-        monitor = self.read_monitor(id)
-        cur.execute(f"DELETE FROM {self.tables.monitors} WHERE id = %s", (id,))
-        self.conn.commit()
-        cur.close()
-        return monitor
+        try:
+            monitor = self.read_monitor(id)
+            cur.execute(f"DELETE FROM {self.tables.monitors} WHERE id = %s", (id,))
+            cur.close()
+            self.conn.commit()
+            return monitor
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def create_task(self, task: Task):
         cur = self.conn.cursor()
-        cur.execute(
-            f"INSERT INTO {self.tables.tasks} (id, timestamp, fk_monitor, status) VALUES (%s, %s, %s, %s)",
-            (task.id, task.timestamp, task.monitor_id, task.status.value),
-        )
-        cur.execute(
-            f"""
-            UPDATE {self.tables.monitors} SET last_task_at = %s WHERE id = %s
-        """,
-            (task.timestamp, task.monitor_id),
-        )
-        self.conn.commit()
-        cur.close()
-        return task
+        try:
+            cur.execute(
+                f"INSERT INTO {self.tables.tasks} (id, timestamp, fk_monitor, status) VALUES (%s, %s, %s, %s)",
+                (task.id, task.timestamp, task.monitor_id, task.status.value),
+            )
+            cur.execute(
+                f"UPDATE {self.tables.monitors} SET last_task_at = %s WHERE id = %s",
+                (task.timestamp, task.monitor_id),
+            )
+            self.conn.commit()
+            return task
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def lock_tasks(self, worker_id: str, batch_size: int) -> [Task]:
         cur = self.conn.cursor()
-        cur.execute(
-            f"""
-            UPDATE {self.tables.tasks} SET status = %s, locked_at = EXTRACT(EPOCH FROM NOW()), locked_by = %s
-            WHERE id IN (
-                SELECT id FROM {self.tables.tasks}
-                WHERE status = %s
-                ORDER BY timestamp ASC
-                LIMIT %s
+        try:
+            cur.execute(
+                f"""
+                UPDATE {self.tables.tasks} SET status = %s, locked_at = EXTRACT(EPOCH FROM NOW()), locked_by = %s
+                WHERE id IN (
+                    SELECT id FROM {self.tables.tasks}
+                    WHERE status = %s
+                    ORDER BY timestamp ASC
+                    LIMIT %s
+                )
+                RETURNING id, timestamp, fk_monitor, status, locked_at, locked_by, completed_at;
+                """,
+                (TaskStatus.RUNNING.value, worker_id, TaskStatus.PENDING.value, batch_size),
             )
-            RETURNING id, timestamp, fk_monitor, status, locked_at, locked_by, completed_at;
-            """,
-            (TaskStatus.RUNNING.value, worker_id, TaskStatus.PENDING.value, batch_size),
-        )
-        rows = cur.fetchall()
-        cur.close()
-        self.conn.commit()
-        return [Task(*row) for row in rows]
+            rows = cur.fetchall()
+            self.conn.commit()
+            return [Task(*row) for row in rows]
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def update_task(self, task: Task):
         cur = self.conn.cursor()
-        cur.execute(
-            f"""
-            UPDATE {self.tables.tasks} SET
-                status = %s,
-                completed_at = %s
-            WHERE id = %s
-            """,
-            (task.status.value, task.completed_at, task.id),
-        )
-        self.conn.commit()
-        cur.close()
+        try:
+            cur.execute(
+                f"""
+                UPDATE {self.tables.tasks} SET
+                    status = %s,
+                    completed_at = %s
+                WHERE id = %s
+                """,
+                (task.status.value, task.completed_at, task.id),
+            )
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def record_probe(self, probe: Probe):
         cur = self.conn.cursor()
+        try:
+            # record probe data
+            cur.execute(
+                f"""
+                INSERT INTO {self.tables.probes} (id, timestamp, fk_monitor, fk_task, response_time, response_code, response_error, content_match)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+                (
+                    probe.id,
+                    probe.timestamp,
+                    probe.monitor_id,
+                    probe.task_id,
+                    probe.response_time,
+                    probe.response_code,
+                    probe.response_error.value if probe.response_error else None,
+                    probe.content_match,
+                ),
+            )
 
-        # record probe data
-        cur.execute(
-            f"""
-            INSERT INTO {self.tables.probes} (id, timestamp, fk_monitor, fk_task, response_time, response_code, response_error, content_match)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-            (
-                probe.id,
-                probe.timestamp,
-                probe.monitor_id,
-                probe.task_id,
-                probe.response_time,
-                probe.response_code,
-                probe.response_error.value if probe.response_error else None,
-                probe.content_match,
-            ),
-        )
+            # update last probe timestamp on monitor
+            cur.execute(
+                f"""
+                UPDATE {self.tables.monitors} SET last_probe_at = %s WHERE id = %s
+            """,
+                (probe.timestamp, probe.monitor_id),
+            )
 
-        # update last probe timestamp on monitor
-        cur.execute(
-            f"""
-            UPDATE {self.tables.monitors} SET last_probe_at = %s WHERE id = %s
-        """,
-            (probe.timestamp, probe.monitor_id),
-        )
-
-        # recording a probe means the task is completed
-        cur.execute(
-            f"""
-            UPDATE {self.tables.tasks} SET status = %s WHERE id = %s
-        """,
-            (TaskStatus.COMPLETED.value, probe.task_id),
-        )
-        self.conn.commit()
-        cur.close()
+            # recording a probe means the task is completed
+            cur.execute(
+                f"""
+                UPDATE {self.tables.tasks} SET status = %s WHERE id = %s
+            """,
+                (TaskStatus.COMPLETED.value, probe.task_id),
+            )
+            self.conn.commit()
+        except Exception as e:
+            self.conn.rollback()
+            raise e
+        finally:
+            cur.close()
 
     def list_probes(self, monitor_id: str, limit: int = 10) -> [Probe]:
         cur = self.conn.cursor()
