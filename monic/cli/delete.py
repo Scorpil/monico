@@ -8,7 +8,7 @@ from monic.core.monitor import Monitor
 @click.option("--id", help="ID of the monitor", default=None)
 @adapt_exceptions_for_cli
 def delete(id):
-    """Lists configured monitors."""
+    """Deletes a monitor."""
     with AppContext.create() as app:
         monitors = app.delete_monitor(id)
     click.echo(f"Removed monitor {id}")

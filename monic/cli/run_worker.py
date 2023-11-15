@@ -8,6 +8,6 @@ from monic.cli.utils import adapt_exceptions_for_cli
 @click.option("--id", help="Worker ID", default=None, type=str)
 @adapt_exceptions_for_cli
 def run_worker(id: Optional[str]):
-    """Starts the manager process."""
+    """Starts the worker process."""
     with AppContext.create() as app:
         app.run_worker(worker_id=id)

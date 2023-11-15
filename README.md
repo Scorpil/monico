@@ -15,6 +15,19 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 
 ## Setup and Configuration
 
+### Prerequisites
+Before installing `monic`, make sure you have PostgreSQL libraries installed on your system. For Mac:
+```
+brew install libpq
+```
+
+For Ubuntu linux:
+```
+sudo apt-get install libpq-dev
+```
+
+### Installation
+
 `monic` is distributed as a standard python package. Installing it in your system is as simple as:
 
 ```
@@ -23,10 +36,26 @@ cd monic/
 pip install .
 ```
 
+_Note_: Installing `psycopg2` fails on Apple Silicon inside of venv. If you stumble upon this issue, it's easy enough to fix by pointing clang linker to the openssl:
+
+```
+export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl/include"
+```
+
+More here: https://stackoverflow.com/questions/26288042/error-installing-psycopg2-library-not-found-for-lssl
+
+### Configuration
+
 Verify that `monic` is installed:
 ```
 $ monic version
 0.1.0-dev
+```
+
+_Note:_ it's also possible to use monic through Python module syntax e.g:
+```
+$ python -m monic version
 ```
 
 Monic is configured through config file `.monic.toml` in your home directory or using environment variables. Supported configuration options:
@@ -42,7 +71,7 @@ postgres_uri="postgres://user:pwd@host:5432/monic"
 log_level="INFO"
 ```
 
-When configuration is created, run `monic setup` to initialize the database. In future, to re-initialize the database use `monic setup --force` (this will destroy all your data!).
+When configuration is created, run `monic setup` to initialize the database. In future, to re-initialize the database use `monic setup --force` (careful, this will destroy all pre-existing data!).
 
 ## Simple Execution
 
@@ -59,6 +88,11 @@ monic create --id scorpil --endpoint "https://scorpil.com" --name "Scorpil's Blo
 Now it's possible to watch the monitor execution results with `status` command:
 ```
 monic status --id scorpil --live
+```
+
+To see the full list of available CLI commands run
+```
+monic --help
 ```
 
 ## Advanced execution
@@ -115,14 +149,3 @@ To run all tests and calculate code-coverage percentage:
 ```
 make test
 ```
-
-## Known Issues
-
-Installing `psycopg2` fails on Apple Silicon inside of venv. If you stumble upon this issue, it's easy enough to fix by pointing clang linker to the openssl:
-
-```
-export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/openssl/include"
-```
-
-More here: https://stackoverflow.com/questions/26288042/error-installing-psycopg2-library-not-found-for-lssl
