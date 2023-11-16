@@ -10,7 +10,9 @@ from monic.core.task import Task
 
 class StorageConnectionException(Exception):
     """Exception raised when storage connection fails"""
+
     pass
+
 
 class StorageSetupException(Exception):
     """Exception raised when storage setup fails"""

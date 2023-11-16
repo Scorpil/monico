@@ -3,9 +3,12 @@ from monic.core.app import App
 from monic.storage.pg import PgStorage
 from monic.config import Config
 
+
 class AppBootstrapException(EnvironmentError):
     """Exception raised when app bootstrap fails."""
+
     pass
+
 
 class AppContext:
     """Context manager for monic app."""
@@ -19,9 +22,10 @@ class AppContext:
 
     def __enter__(self) -> App:
         return self.app
-    
+
     def __exit__(self, *args):
         self.app.shutdown()
+
 
 def build_default_app() -> App:
     """Builds main monic app."""

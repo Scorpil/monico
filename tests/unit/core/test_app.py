@@ -128,6 +128,7 @@ def test_run(app):
             mock_worker_run.assert_called_once()
             mock_manager_run.assert_called_once()
 
+
 def test_shutdown(app):
     disconnect_called = False
 

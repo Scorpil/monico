@@ -47,7 +47,9 @@ class Worker:
             try:
                 batch = self.lock_batch()
             except Exception as e:
-                self.log.error(f"worker encountered an unexpected exception while locking: {e}")
+                self.log.error(
+                    f"worker encountered an unexpected exception while locking: {e}"
+                )
                 await asyncio.sleep(self.MIN_WAIT_TIME)
                 continue
             self.log.debug(f"worker has locked a {len(batch)} tasks")

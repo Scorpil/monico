@@ -52,7 +52,6 @@ class PgStorage(StorageInterface):
                 f"Could not connect to storage backend: {e}"
             )
 
-
     def disconnect(self):
         self.conn.close()
 
@@ -267,7 +266,12 @@ class PgStorage(StorageInterface):
                 )
                 RETURNING id, timestamp, fk_monitor, status, locked_at, locked_by, completed_at;
                 """,
-                (TaskStatus.RUNNING.value, worker_id, TaskStatus.PENDING.value, batch_size),
+                (
+                    TaskStatus.RUNNING.value,
+                    worker_id,
+                    TaskStatus.PENDING.value,
+                    batch_size,
+                ),
             )
             rows = cur.fetchall()
             self.conn.commit()

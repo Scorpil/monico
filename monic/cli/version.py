@@ -1,5 +1,6 @@
 import click
 
+
 @click.command()
 def version():
     """Prints the version"""

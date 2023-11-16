@@ -167,7 +167,7 @@ Now you can run unit tests with
 make test-unit
 ```
 
-For integration tests you also need to export environment variable MONIC_TEST_POSTGRES_URI, e.g:
+For integration tests you also need to export environment variable `MONIC_TEST_POSTGRES_URI`` (note the `_TEST_` part), e.g:
 ```
 export MONIC_TEST_POSTGRES_URI="postgres://user:pwd@host:5432/monic"
 ```

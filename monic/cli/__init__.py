@@ -14,6 +14,7 @@ from monic.cli.version import version
 def cli():
     pass
 
+
 cli.add_command(setup)
 cli.add_command(create)
 cli.add_command(list_monitors)

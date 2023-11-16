@@ -11,24 +11,24 @@ def test_list():
     runner = CliRunner()
     test_args = []
 
-    with mock.patch.object(logging, 'getLogger') as get_logger_mock:
+    with mock.patch.object(logging, "getLogger") as get_logger_mock:
         get_logger_mock.return_value = mock.MagicMock()
-        with mock.patch.object(App, 'list_monitors') as list_monitors_mock:
+        with mock.patch.object(App, "list_monitors") as list_monitors_mock:
             list_monitors_mock.return_value = [
                 Monitor(
-                    mid='test-id',
-                    name='test-name',
-                    endpoint='test-endpoint',
+                    mid="test-id",
+                    name="test-name",
+                    endpoint="test-endpoint",
                     interval=120,
-                    body_regexp='test-regexp',
+                    body_regexp="test-regexp",
                 ),
                 Monitor(
-                    mid='test-id-2',
-                    name='test-name-2',
-                    endpoint='test-endpoint-2',
+                    mid="test-id-2",
+                    name="test-name-2",
+                    endpoint="test-endpoint-2",
                     interval=60,
-                    body_regexp='test-regexp-2',
-                )
+                    body_regexp="test-regexp-2",
+                ),
             ]
 
             result = runner.invoke(list_monitors, test_args)
@@ -42,5 +42,5 @@ def test_list():
 └───────────┴─────────────┴─────────────────────────┴───────────┘
 """
             assert list_monitors_mock.called_once()
-            #assert result.exit_code == 0
+            # assert result.exit_code == 0
             assert result.output == expected_output

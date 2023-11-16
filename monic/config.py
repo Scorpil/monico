@@ -39,5 +39,8 @@ class Config:
 
     def load_from_env(self, environment: dict = os.environ):
         """Builds config from environment variables"""
-        self.postgres_uri = environment.get("MONIC_TEST_POSTGRES_URI", environment.get("MONIC_POSTGRES_URI", self.postgres_uri))
+        self.postgres_uri = environment.get(
+            "MONIC_TEST_POSTGRES_URI",
+            environment.get("MONIC_POSTGRES_URI", self.postgres_uri),
+        )
         self.log_level = environment.get("MONIC_LOG_LEVEL", self.log_level)

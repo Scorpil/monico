@@ -65,7 +65,7 @@ class App:
         """Starts the worker process responsible for executing probes"""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(Worker(self.storage, self.log, worker_id).run())
-    
+
     def run(self, worker_id: Optional[str] = None):
         """Starts both manager and worker processes concurrently."""
         loop = asyncio.get_event_loop()

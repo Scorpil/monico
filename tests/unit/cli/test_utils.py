@@ -8,6 +8,7 @@ from monic.core.storage import (
 from monic.core.monitor import MonitorAttributeError
 from monic.cli.utils import _adapt
 
+
 def test_adapt():
     def raise_exception(ExceptionClass):
         raise ExceptionClass("test")
