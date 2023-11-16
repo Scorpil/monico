@@ -53,7 +53,7 @@ class Manager:
             )
 
     async def run(self):
-        self.log.info(f"manager started")
+        self.log.info(f"manager has started")
 
         while True:
             try:
