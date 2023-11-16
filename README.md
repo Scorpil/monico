@@ -16,7 +16,7 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 ## Setup and Configuration
 
 ### Prerequisites
-Before installing `monic`, make sure you have PostgreSQL libraries installed on your system. For Mac:
+You need Python 3.11 to run `monic`. Additionally, make sure you have PostgreSQL libraries installed on your system. For Mac:
 ```
 brew install libpq
 ```
@@ -59,10 +59,10 @@ $ python -m monic version
 0.1.0-dev
 ```
 
-Monic is configured through config file `.monic.toml` in your home directory or using environment variables. Supported configuration options:
+Monic is configured through config file `.monic.toml` in user home directory or using environment variables. Supported configuration options:
 
-- `postgres_uri` (or env variable `MONIC_POSTGRES_URI`): **required**, connection string to connect to database
-- `log_level` (or env variable `LOG_LEVEL`): optional, controls logging verbicity. Valid values are `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL`. Default is `WARNING`.
+- `postgres_uri` (or environment variable `MONIC_POSTGRES_URI`): **required**, connection string to connect to database
+- `log_level` (or environment variable `LOG_LEVEL`): optional, controls logging verbicity. Valid values are `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL`. Default is `WARNING`.
 
 **Create the configuration file before continuing setup:**
 
@@ -93,7 +93,38 @@ monic status --id scorpil --live
 
 To see the full list of available CLI commands run
 ```
-monic --help
+$ monic --help
+Usage: monic [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  create       Creates a new monitor
+  delete       Deletes a monitor.
+  list         Lists configured monitors.
+  run          Starts both manager and worker processes concurrently.
+  run-manager  Starts the manager process.
+  run-worker   Starts the worker process.
+  setup        Initializes the database
+  status       Displays status of a monitor
+  version      Prints the version
+```
+
+You can also print help for every command:
+```
+$ monic create --help
+Usage: monic create [OPTIONS]
+
+  Creates a new monitor
+
+Options:
+  --id TEXT           ID of the monitor
+  --name TEXT         Name of the monitor
+  --endpoint TEXT     URL to monitor
+  --interval INTEGER  Monitoring interval in seconds
+  --body-regexp TEXT  Regular expression to match in the response body
+  --help              Show this message and exit.
 ```
 
 ## Advanced execution
@@ -165,5 +196,5 @@ There are a few core concepts Monic uses:
 
 # TODO
 
-- Test coverage is at 88% and could be improved. The main culprit here is just time constraints
+- Test coverage is at 88% and could be improved. The main culprit here is just time constraints.
 - Tests around CLI commands require database connection right now. This can be eliminated by reorganising the code in a minor way and mocking a few places.

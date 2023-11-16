@@ -87,7 +87,7 @@ class PgStorage(StorageInterface):
                     id TEXT PRIMARY KEY,
                     timestamp INT NOT NULL,
                     fk_monitor TEXT NOT NULL,
-                    status task_status NOT NULL,
+                    status {self.tables.tasks}_status NOT NULL,
                     locked_at INT NULL,
                     locked_by TEXT NULL,
                     completed_at INT NULL,
@@ -116,7 +116,7 @@ class PgStorage(StorageInterface):
                     fk_task TEXT NULL,
                     response_time FLOAT NULL,
                     response_code INT NULL,
-                    response_error probe_response_error NULL,
+                    response_error {self.tables.probes}_response_error NULL,
                     content_match TEXT NULL,
                     CONSTRAINT fk_monitor
                         FOREIGN KEY(fk_monitor)
