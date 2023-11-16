@@ -56,6 +56,7 @@ $ monic version
 _Note:_ it's also possible to use monic through Python module syntax e.g:
 ```
 $ python -m monic version
+0.1.0-dev
 ```
 
 Monic is configured through config file `.monic.toml` in your home directory or using environment variables. Supported configuration options:
@@ -102,7 +103,7 @@ monic --help
 - **Manager** process is only responsible for scheduling tasks (probes). Manager is lightweight so performance-wise it is enough to run a single manager instance at a time. However, it's ok to run multiple manager instances concurrently for redundancy.
 - **Worker** process performs HTTP requests and records results. It is possible to run multiple instances of worker for improved scalability and availability guarantees.
 
-`monic run` runs both processes concurrently, but it's possible to run them seperately with `monic run-manager` and `monic run-worker respectively`.
+`monic run` runs both processes concurrently, but it's possible to run them seperately with `monic run-manager` and `monic run-worker` respectively. It's possible to run multiple instances of each process for scalability and reliability.
 
 ### Running in Docker
 
@@ -149,3 +150,20 @@ To run all tests and calculate code-coverage percentage:
 ```
 make test
 ```
+
+# Architecture
+
+There are a few core concepts Monic uses:
+
+- **Monitor** is a core Monic entity representing a specific website monitoring task. It encapsulates all the details and settings required to periodically check a website's availability and performance, such as endpoint url, check frequency, regex pattern for data lookup etc. When a monitor is active, Monic periodically sends requests (i.e. _probes_) to the specified URL at the defined frequency. It then captures key data from the response, such as response time and HTTP status code. If a regex pattern is provided, Monic also checks the response content against this pattern.
+- **Task** is a scheduled item of work, i.e. check that is to be executed.
+- **Probe** is an individual instance of a monitoring check performed by Monic. Each probe is an action initiated by a Monitor to assess the current state of a specified website.
+- **Manager** is an internal scheduling component in Monic responsible for orchestrating the execution of _Probes_ according to their defined frequencies. It does this be creating tasks for workers to pick up.
+- **Worker** is a component that is responsible for performing monitoring checks (_Probes_) and recording the execution results. Multiple worker singles are allowed to run concurrently to enable scaling.
+
+![architecture diagram](./monic-architecture.jpg)
+
+# TODO
+
+- Test coverage is at 88% and could be improved. The main culprit here is just time constraints
+- Tests around CLI commands require database connection right now. This can be eliminated by reorganising the code in a minor way and mocking a few places.
