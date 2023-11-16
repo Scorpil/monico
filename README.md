@@ -198,3 +198,4 @@ There are a few core concepts Monic uses:
 
 - Test coverage is at 88% and could be improved. The main culprit here is just time constraints.
 - Tests around CLI commands require database connection right now. This can be eliminated by reorganising the code in a minor way and mocking a few places.
+- Locking batch size should be configurable
