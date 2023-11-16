@@ -136,6 +136,8 @@ Options:
 
 `monic run` runs both processes concurrently, but it's possible to run them seperately with `monic run-manager` and `monic run-worker` respectively. It's possible to run multiple instances of each process for scalability and reliability.
 
+Complete app state is stored in database, so it's possible to e.g. run manager/workers processes on a server and control them from a local environment just by configuring `monic` to use the same database.
+
 ### Running in Docker
 
 It's possible to run `monic` in Docker by building an image as follows:
