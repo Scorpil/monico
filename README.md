@@ -1,4 +1,4 @@
-# Monico
+# Monico [![codecov](https://codecov.io/gh/Scorpil/monico/graph/badge.svg?token=2N7NG9INLT)](https://codecov.io/gh/Scorpil/monico)
 
 <p align="center">
   <img alt="Monico Logo" src="./monico-logo.svg" width="200"/>
