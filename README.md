@@ -54,13 +54,13 @@ More here: https://stackoverflow.com/questions/26288042/error-installing-psycopg
 Verify that `monico` is installed:
 ```
 $ monico version
-0.1.0-dev
+0.1.dev0
 ```
 
 _Note:_ it's also possible to use monico through Python module syntax e.g:
 ```
 $ python -m monico version
-0.1.0-dev
+0.1.dev0
 ```
 
 Monico is configured through config file `.monico.toml` in user home directory or using environment variables. Supported configuration options:

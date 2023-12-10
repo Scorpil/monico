@@ -22,7 +22,7 @@ classifiers = [
     "Topic :: System :: Monitoring",
     "Topic :: System :: Networking :: Monitoring",
 ]
-version = "0.1.0"
+version = "0.1.dev0"
 dynamic = ["dependencies", "readme"]
 
 [tool.setuptools.dynamic]
@@ -31,6 +31,3 @@ readme = {file = ["README.md"]}
 
 [project.scripts]
 monico = "monico:main"
-
-# ... other project metadata fields as specified in:
-#     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
