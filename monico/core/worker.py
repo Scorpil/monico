@@ -4,9 +4,9 @@ import asyncio
 import logging
 import uuid
 import aiohttp
-from monic.core.storage import StorageInterface
-from monic.core.task import Task
-from monic.core.probe import Probe, ProbeResponseError
+from monico.core.storage import StorageInterface
+from monico.core.task import Task
+from monico.core.probe import Probe, ProbeResponseError
 from typing import Optional
 
 

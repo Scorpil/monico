@@ -1,7 +1,7 @@
 import logging
-from monic.core.app import App
-from monic.storage.pg import PgStorage
-from monic.config import Config
+from monico.core.app import App
+from monico.storage.pg import PgStorage
+from monico.config import Config
 
 
 class AppBootstrapException(EnvironmentError):
@@ -11,7 +11,7 @@ class AppBootstrapException(EnvironmentError):
 
 
 class AppContext:
-    """Context manager for monic app."""
+    """Context manager for monico app."""
 
     @staticmethod
     def create():
@@ -28,12 +28,12 @@ class AppContext:
 
 
 def build_default_app() -> App:
-    """Builds main monic app."""
+    """Builds main monico app."""
     config = Config.build()
 
     storage = PgStorage(config.postgres_uri)
 
-    log = logging.getLogger("monic")
+    log = logging.getLogger("monico")
     log.setLevel(config.log_level)
 
     ch = logging.StreamHandler()

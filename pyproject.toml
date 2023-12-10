@@ -3,11 +3,11 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "monic"
+name = "monico"
 authors = [
     {name = "Andrew Savchyn", email = "dev@scorpil.com"},
 ]
-description = "Monic is a simple command-line utility for efficiently monitoring and analyzing the availability of websites."
+description = "Monico is a simple command-line utility for efficiently monitoring and analyzing the availability of websites."
 requires-python = ">=3.11"
 keywords = ["monitoring", "uptime", "networking", "web", "http", "status-check"]
 license = {file = "LICENSE.txt"}
@@ -30,7 +30,7 @@ dependencies = {file = ["requirements.txt"]}
 readme = {file = ["README.md"]}
 
 [project.scripts]
-monic = "monic:main"
+monico = "monico:main"
 
 # ... other project metadata fields as specified in:
 #     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/

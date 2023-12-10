@@ -1,9 +1,9 @@
 import re
 from typing import Optional
 from typing import Optional
-from monic.utils import is_valid_url
-from monic.core.probe import ProbeResponseError, Probe
-from monic.core.task import Task
+from monico.utils import is_valid_url
+from monico.core.probe import ProbeResponseError, Probe
+from monico.core.task import Task
 
 
 class MonitorAttributeError(ValueError):

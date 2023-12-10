@@ -1,11 +1,11 @@
 """
-Defines an abstract storage class for storing monic data.
+Defines an abstract storage class for storing monico data.
 """
 from enum import Enum
 from abc import ABC, abstractmethod
-from monic.core.monitor import Monitor
-from monic.core.probe import Probe
-from monic.core.task import Task
+from monico.core.monitor import Monitor
+from monico.core.probe import Probe
+from monico.core.task import Task
 
 
 class StorageConnectionException(Exception):

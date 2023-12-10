@@ -1,11 +1,11 @@
 import pytest
 import logging
 from unittest import mock
-from monic.core.app import App
-from monic.core.monitor import Monitor
-from monic.core.probe import Probe
-from monic.core.worker import Worker
-from monic.core.manager import Manager
+from monico.core.app import App
+from monico.core.monitor import Monitor
+from monico.core.probe import Probe
+from monico.core.worker import Worker
+from monico.core.manager import Manager
 from ..storage import MemStorage
 
 

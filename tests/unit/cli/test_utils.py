@@ -1,12 +1,12 @@
 import pytest
 import click
-from monic.core.storage import (
+from monico.core.storage import (
     StorageSetupException,
     MonitorAlreadyExistsException,
     MonitorNotFoundException,
 )
-from monic.core.monitor import MonitorAttributeError
-from monic.cli.utils import _adapt
+from monico.core.monitor import MonitorAttributeError
+from monico.cli.utils import _adapt
 
 
 def test_adapt():

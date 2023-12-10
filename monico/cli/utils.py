@@ -1,6 +1,6 @@
 import click
-from monic.core.monitor import MonitorAttributeError
-from monic.core.storage import (
+from monico.core.monitor import MonitorAttributeError
+from monico.core.storage import (
     StorageSetupException,
     MonitorAlreadyExistsException,
     MonitorNotFoundException,
@@ -9,7 +9,7 @@ from monic.core.storage import (
 
 
 def _adapt(func):
-    """Adapts monic exceptions to click exceptions for CLI usage"""
+    """Adapts monico exceptions to click exceptions for CLI usage"""
     try:
         return func()
     except (

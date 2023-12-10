@@ -2,8 +2,8 @@ import pytest
 import asyncio
 import time
 import logging
-from monic.core.manager import Manager
-from monic.core.monitor import Monitor
+from monico.core.manager import Manager
+from monico.core.monitor import Monitor
 from ..storage import MemStorage
 
 

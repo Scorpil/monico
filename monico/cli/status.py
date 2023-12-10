@@ -4,9 +4,9 @@ import time
 from rich.markup import escape
 from rich.console import Console
 from rich.table import Table
-from monic.bootstrap import AppContext
-from monic.cli.utils import adapt_exceptions_for_cli
-from monic.utils import (
+from monico.bootstrap import AppContext
+from monico.cli.utils import adapt_exceptions_for_cli
+from monico.utils import (
     timestamp_to_human_readable_string,
     seconds_to_human_readable_string,
 )

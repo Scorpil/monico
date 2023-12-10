@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import uuid
 import psycopg2
-from monic.core.storage import (
+from monico.core.storage import (
     StorageInterface,
     StorageSetupException,
     StorageConnectionException,
@@ -9,9 +9,9 @@ from monic.core.storage import (
     MonitorNotFoundException,
     MonitorSortingOrder,
 )
-from monic.core.monitor import Monitor
-from monic.core.task import Task, TaskStatus
-from monic.core.probe import Probe, ProbeResponseError
+from monico.core.monitor import Monitor
+from monico.core.task import Task, TaskStatus
+from monico.core.probe import Probe, ProbeResponseError
 
 
 @dataclass
@@ -23,7 +23,7 @@ class TableConfig:
 
 class PgStorage(StorageInterface):
     """
-    Memory storage implementation for monic.
+    Memory storage implementation for monico.
     Used for testing to avoid database dependencies.
     """
 
@@ -31,7 +31,7 @@ class PgStorage(StorageInterface):
     service_uri: str
     conn: psycopg2.extensions.connection
 
-    def __init__(self, service_uri: str, prefix: str = "monic"):
+    def __init__(self, service_uri: str, prefix: str = "monico"):
         self.tables = TableConfig(
             monitors=prefix + "_monitors",
             tasks=prefix + "_tasks",

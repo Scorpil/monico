@@ -1,8 +1,8 @@
 import time
 import asyncio
 import logging
-from monic.core.storage import StorageInterface, MonitorSortingOrder
-from monic.core.monitor import Monitor
+from monico.core.storage import StorageInterface, MonitorSortingOrder
+from monico.core.monitor import Monitor
 
 
 class Manager:

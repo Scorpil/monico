@@ -1,11 +1,11 @@
 import pytest
 import time
 import os
-from monic.storage.pg import PgStorage, StorageSetupException
-from monic.core.monitor import Monitor
-from monic.core.storage import MonitorAlreadyExistsException, MonitorNotFoundException
-from monic.core.task import Task, TaskStatus
-from monic.core.probe import Probe
+from monico.storage.pg import PgStorage, StorageSetupException
+from monico.core.monitor import Monitor
+from monico.core.storage import MonitorAlreadyExistsException, MonitorNotFoundException
+from monico.core.task import Task, TaskStatus
+from monico.core.probe import Probe
 
 
 @pytest.fixture
@@ -22,11 +22,11 @@ def test_monitor():
 class TestPgStorage:
     @classmethod
     def setup_class(cls):
-        test_postgres_uri = os.environ.get("MONIC_TEST_POSTGRES_URI", None)
+        test_postgres_uri = os.environ.get("MONICO_TEST_POSTGRES_URI", None)
         if not test_postgres_uri:
-            pytest.skip("Set MONIC_TEST_POSTGRES_URI to enable integration tests")
+            pytest.skip("Set MONICO_TEST_POSTGRES_URI to enable integration tests")
 
-        cls.storage = PgStorage(test_postgres_uri, prefix="monic_test")
+        cls.storage = PgStorage(test_postgres_uri, prefix="monico_test")
         cls.storage.connect()
 
     @classmethod
@@ -64,7 +64,7 @@ class TestPgStorage:
         # verify monitor in db
         cur = self.storage.conn.cursor()
         cur.execute(
-            "SELECT * FROM monic_test_monitors WHERE id = %s", (created_monitor.id,)
+            "SELECT * FROM monico_test_monitors WHERE id = %s", (created_monitor.id,)
         )
         row = cur.fetchone()
         assert row[0] == created_monitor.id
@@ -159,7 +159,7 @@ class TestPgStorage:
         assert row[6] == test_task.completed_at
 
         cur.execute(
-            "SELECT last_task_at FROM monic_test_monitors WHERE id = %s", (monitor.id,)
+            "SELECT last_task_at FROM monico_test_monitors WHERE id = %s", (monitor.id,)
         )
         row = cur.fetchone()
         assert row[0] == test_task.timestamp
@@ -188,7 +188,7 @@ class TestPgStorage:
 
         cur = self.storage.conn.cursor()
         cur.execute(
-            "SELECT status, locked_at, locked_by FROM monic_test_tasks WHERE id = %s",
+            "SELECT status, locked_at, locked_by FROM monico_test_tasks WHERE id = %s",
             (task1.id,),
         )
         row = cur.fetchone()
@@ -197,7 +197,7 @@ class TestPgStorage:
         assert row[2] == test_worker
 
         cur.execute(
-            "SELECT status, locked_at, locked_by FROM monic_test_tasks WHERE id = %s",
+            "SELECT status, locked_at, locked_by FROM monico_test_tasks WHERE id = %s",
             (task2.id,),
         )
         row = cur.fetchone()
@@ -207,7 +207,7 @@ class TestPgStorage:
 
         # task3 should not be locked
         cur.execute(
-            "SELECT status, locked_at, locked_by FROM monic_test_tasks WHERE id = %s",
+            "SELECT status, locked_at, locked_by FROM monico_test_tasks WHERE id = %s",
             (task3.id,),
         )
         row = cur.fetchone()
@@ -221,7 +221,7 @@ class TestPgStorage:
 
         cur = self.storage.conn.cursor()
         cur.execute(
-            "SELECT status FROM monic_test_tasks WHERE id = %s", (test_task.id,)
+            "SELECT status FROM monico_test_tasks WHERE id = %s", (test_task.id,)
         )
         row = cur.fetchone()
         assert row[0] == TaskStatus.PENDING.value
@@ -230,7 +230,7 @@ class TestPgStorage:
         self.storage.update_task(test_task)
 
         cur.execute(
-            "SELECT status FROM monic_test_tasks WHERE id = %s", (test_task.id,)
+            "SELECT status FROM monico_test_tasks WHERE id = %s", (test_task.id,)
         )
         row = cur.fetchone()
         assert row[0] == TaskStatus.ABANDONED.value

@@ -1,10 +1,14 @@
-# Monic
+# Monico
+
+<p align="center">
+  <img alt="Monico Logo" src="./monico-logo.svg" width="200"/>
+</p>
 
 ## Introduction
 
-Monic is a simple command-line utility for efficiently monitoring and analyzing the availability of websites.
+Monico is a simple command-line utility for efficiently monitoring and analyzing the availability of websites.
 
-Monic CLI is built with a focus on ease of use, flexibility, and reliability. It allows configuring website monitoring to collect essential data such as response times, status codes, and content checks, storing all information in a structured format for easy retrieval and analysis.
+Monico CLI is built with a focus on ease of use, flexibility, and reliability. It allows configuring website monitoring to collect essential data such as response times, status codes, and content checks, storing all information in a structured format for easy retrieval and analysis.
 
 ## Features
 
@@ -16,7 +20,7 @@ Monic CLI is built with a focus on ease of use, flexibility, and reliability. It
 ## Setup and Configuration
 
 ### Prerequisites
-You need Python 3.11 to run `monic`. Additionally, make sure you have PostgreSQL libraries installed on your system. For Mac:
+You need Python 3.11 to run `monico`. Additionally, make sure you have PostgreSQL libraries installed on your system. For Mac:
 ```
 brew install libpq
 ```
@@ -28,11 +32,11 @@ sudo apt-get install libpq-dev
 
 ### Installation
 
-`monic` is distributed as a standard python package. Installing it in your system is as simple as:
+`monico` is distributed as a standard python package. Installing it in your system is as simple as:
 
 ```
 git clone <repo-url> monic
-cd monic/
+cd monico/
 pip install .
 ```
 
@@ -47,54 +51,54 @@ More here: https://stackoverflow.com/questions/26288042/error-installing-psycopg
 
 ### Configuration
 
-Verify that `monic` is installed:
+Verify that `monico` is installed:
 ```
-$ monic version
+$ monico version
 0.1.0-dev
 ```
 
-_Note:_ it's also possible to use monic through Python module syntax e.g:
+_Note:_ it's also possible to use monico through Python module syntax e.g:
 ```
-$ python -m monic version
+$ python -m monico version
 0.1.0-dev
 ```
 
-Monic is configured through config file `.monic.toml` in user home directory or using environment variables. Supported configuration options:
+Monico is configured through config file `.monico.toml` in user home directory or using environment variables. Supported configuration options:
 
-- `postgres_uri` (or environment variable `MONIC_POSTGRES_URI`): **required**, connection string to connect to database
+- `postgres_uri` (or environment variable `MONICO_POSTGRES_URI`): **required**, connection string to connect to database
 - `log_level` (or environment variable `LOG_LEVEL`): optional, controls logging verbicity. Valid values are `DEBUG`, `INFO`, `WARNING`, `ERROR` and `CRITICAL`. Default is `WARNING`.
 
 **Create the configuration file before continuing setup:**
 
-Example `~/.monic.toml`
+Example `~/.monico.toml`
 ```
-postgres_uri="postgres://user:pwd@host:5432/monic"
+postgres_uri="postgres://user:pwd@host:5432/monico"
 log_level="INFO"
 ```
 
-When configuration is created, run `monic setup` to initialize the database. In future, to re-initialize the database use `monic setup --force` (careful, this will destroy all pre-existing data!).
+When configuration is created, run `monico setup` to initialize the database. In future, to re-initialize the database use `monico setup --force` (careful, this will destroy all pre-existing data!).
 
 ## Simple Execution
 
 Open two terminals. In the first one run
 ```
-monic run
+monico run
 ```
 
 In the second one, create the monitor, for example:
 ```
-monic create --id scorpil --endpoint "https://scorpil.com" --name "Scorpil's Blog" --interval 5 --body-regexp "The Long Road to [A-Za-z0-9/]+"
+monico create --id scorpil --endpoint "https://scorpil.com" --name "Scorpil's Blog" --interval 5 --body-regexp "The Long Road to [A-Za-z0-9/]+"
 ```
 
 Now it's possible to watch the monitor execution results with `status` command:
 ```
-monic status --id scorpil --live
+monico status --id scorpil --live
 ```
 
 To see the full list of available CLI commands run
 ```
-$ monic --help
-Usage: monic [OPTIONS] COMMAND [ARGS]...
+$ monico --help
+Usage: monico [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --help  Show this message and exit.
@@ -113,8 +117,8 @@ Commands:
 
 You can also print help for every command:
 ```
-$ monic create --help
-Usage: monic create [OPTIONS]
+$ monico create --help
+Usage: monico create [OPTIONS]
 
   Creates a new monitor
 
@@ -130,31 +134,31 @@ Options:
 ## Advanced execution
 
 ### Separate workers
-`monic` consists of two major parts:
+`monico` consists of two major parts:
 - **Manager** process is only responsible for scheduling tasks (probes). Manager is lightweight so performance-wise it is enough to run a single manager instance at a time. However, it's ok to run multiple manager instances concurrently for redundancy.
 - **Worker** process performs HTTP requests and records results. It is possible to run multiple instances of worker for improved scalability and availability guarantees.
 
-`monic run` runs both processes concurrently, but it's possible to run them seperately with `monic run-manager` and `monic run-worker` respectively. It's possible to run multiple instances of each process for scalability and reliability.
+`monico run` runs both processes concurrently, but it's possible to run them seperately with `monico run-manager` and `monico run-worker` respectively. It's possible to run multiple instances of each process for scalability and reliability.
 
-Complete app state is stored in database, so it's possible to e.g. run manager/workers processes on a server and control them from a local environment just by configuring `monic` to use the same database.
+Complete app state is stored in database, so it's possible to e.g. run manager/workers processes on a server and control them from a local environment just by configuring `monico` to use the same database.
 
 ### Running in Docker
 
-It's possible to run `monic` in Docker by building an image as follows:
+It's possible to run `monico` in Docker by building an image as follows:
 
 ```
 docker build . -t monic
 ```
 
-Then running monic as follows:
+Then running monico as follows:
 
 ```
-docker run -tie MONIC_POSTGRES_URI="<your-postgres-uri>" monic <arguments>
+docker run -tie MONICO_POSTGRES_URI="<your-postgres-uri>" monico <arguments>
 ```
 
 For example:
 ```
-docker run -tie MONIC_POSTGRES_URI="postgres://user:pwd@host:5432/monic" monic status --id my-monitor --live
+docker run -tie MONICO_POSTGRES_URI="postgres://user:pwd@host:5432/monico" monico status --id my-monitor --live
 ```
 
 ## Testing
@@ -169,9 +173,9 @@ Now you can run unit tests with
 make test-unit
 ```
 
-For integration tests you also need to export environment variable `MONIC_TEST_POSTGRES_URI`` (note the `_TEST_` part), e.g:
+For integration tests you also need to export environment variable `MONICO_TEST_POSTGRES_URI`` (note the `_TEST_` part), e.g:
 ```
-export MONIC_TEST_POSTGRES_URI="postgres://user:pwd@host:5432/monic"
+export MONICO_TEST_POSTGRES_URI="postgres://user:pwd@host:5432/monico"
 ```
 
 To run integrations tests:
@@ -186,15 +190,15 @@ make test
 
 # Architecture
 
-There are a few core concepts Monic uses:
+There are a few core concepts Monico uses:
 
-- **Monitor** is a core Monic entity representing a specific website monitoring task. It encapsulates all the details and settings required to periodically check a website's availability and performance, such as endpoint url, check frequency, regex pattern for data lookup etc. When a monitor is active, Monic periodically sends requests (i.e. _probes_) to the specified URL at the defined frequency. It then captures key data from the response, such as response time and HTTP status code. If a regex pattern is provided, Monic also checks the response content against this pattern.
+- **Monitor** is a core Monico entity representing a specific website monitoring task. It encapsulates all the details and settings required to periodically check a website's availability and performance, such as endpoint url, check frequency, regex pattern for data lookup etc. When a monitor is active, Monico periodically sends requests (i.e. _probes_) to the specified URL at the defined frequency. It then captures key data from the response, such as response time and HTTP status code. If a regex pattern is provided, Monico also checks the response content against this pattern.
 - **Task** is a scheduled item of work, i.e. check that is to be executed.
-- **Probe** is an individual instance of a monitoring check performed by Monic. Each probe is an action initiated by a Monitor to assess the current state of a specified website.
-- **Manager** is an internal scheduling component in Monic responsible for orchestrating the execution of _Probes_ according to their defined frequencies. It does this be creating tasks for workers to pick up.
+- **Probe** is an individual instance of a monitoring check performed by Monico. Each probe is an action initiated by a Monitor to assess the current state of a specified website.
+- **Manager** is an internal scheduling component in Monico responsible for orchestrating the execution of _Probes_ according to their defined frequencies. It does this be creating tasks for workers to pick up.
 - **Worker** is a component that is responsible for performing monitoring checks (_Probes_) and recording the execution results. Multiple worker singles are allowed to run concurrently to enable scaling.
 
-![architecture diagram](./monic-architecture.jpg)
+![architecture diagram](./monico-architecture.jpg)
 
 # TODO
 

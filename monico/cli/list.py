@@ -2,10 +2,10 @@ import click
 from rich.markup import escape
 from rich.console import Console
 from rich.table import Table
-from monic.bootstrap import AppContext
-from monic.cli.utils import adapt_exceptions_for_cli
-from monic.core.monitor import Monitor
-from monic.utils import seconds_to_human_readable_string
+from monico.bootstrap import AppContext
+from monico.cli.utils import adapt_exceptions_for_cli
+from monico.core.monitor import Monitor
+from monico.utils import seconds_to_human_readable_string
 
 
 def print_monitors(monitors: [Monitor]):

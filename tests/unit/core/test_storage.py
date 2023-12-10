@@ -1,6 +1,6 @@
 import pytest
 from unittest import mock
-from monic.core.storage import StorageInterface
+from monico.core.storage import StorageInterface
 
 
 class TestStorageInterface:

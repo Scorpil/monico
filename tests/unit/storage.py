@@ -1,12 +1,12 @@
 import uuid
-from monic.core.storage import StorageInterface
-from monic.core.monitor import Monitor
-from monic.core.task import TaskStatus, Task
+from monico.core.storage import StorageInterface
+from monico.core.monitor import Monitor
+from monico.core.task import TaskStatus, Task
 
 
 class MemStorage(StorageInterface):
     """
-    Memory storage implementation for monic.
+    Memory storage implementation for monico.
     Used for testing to avoid database dependencies.
     """
 

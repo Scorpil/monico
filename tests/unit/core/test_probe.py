@@ -1,5 +1,5 @@
 import time
-from monic.core.probe import Probe
+from monico.core.probe import Probe
 
 
 def test_probe_create():

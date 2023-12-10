@@ -2,9 +2,9 @@ import logging
 from unittest import mock
 import click
 from click.testing import CliRunner
-from monic.core.app import App
-from monic.core.monitor import Monitor
-from monic.cli.create import create
+from monico.core.app import App
+from monico.core.monitor import Monitor
+from monico.cli.create import create
 
 
 def test_create():

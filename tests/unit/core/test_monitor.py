@@ -1,5 +1,5 @@
 import pytest
-from monic.core.monitor import Monitor, MonitorAttributeError
+from monico.core.monitor import Monitor, MonitorAttributeError
 
 
 def test_repr():

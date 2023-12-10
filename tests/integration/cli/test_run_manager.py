@@ -1,8 +1,8 @@
 import logging
 from unittest import mock
 from click.testing import CliRunner
-from monic.core.app import App
-from monic.cli.run_manager import run_manager
+from monico.core.app import App
+from monico.cli.run_manager import run_manager
 
 
 def test_run_manager():

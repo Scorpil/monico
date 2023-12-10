@@ -1,8 +1,8 @@
 import logging
 from unittest import mock
 from click.testing import CliRunner
-from monic.core.app import App
-from monic.cli.setup import setup as setup_cmd
+from monico.core.app import App
+from monico.cli.setup import setup as setup_cmd
 
 
 def test_cli_command():

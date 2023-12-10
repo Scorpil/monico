@@ -1,4 +1,4 @@
-from monic.cli import cli
+from monico.cli import cli
 
 
 def main():

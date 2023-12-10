@@ -1,5 +1,5 @@
 import time
-from monic.core.task import Task, TaskStatus
+from monico.core.task import Task, TaskStatus
 
 
 def test_task_create():

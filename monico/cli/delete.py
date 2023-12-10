@@ -1,7 +1,7 @@
 import click
-from monic.bootstrap import AppContext
-from monic.cli.utils import adapt_exceptions_for_cli
-from monic.core.monitor import Monitor
+from monico.bootstrap import AppContext
+from monico.cli.utils import adapt_exceptions_for_cli
+from monico.core.monitor import Monitor
 
 
 @click.command()

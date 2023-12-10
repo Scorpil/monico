@@ -2,9 +2,9 @@ import logging
 from unittest import mock
 import click
 from click.testing import CliRunner
-from monic.core.app import App
-from monic.core.monitor import Monitor
-from monic.cli.delete import delete
+from monico.core.app import App
+from monico.core.monitor import Monitor
+from monico.cli.delete import delete
 
 
 def test_delete():

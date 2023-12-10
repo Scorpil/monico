@@ -4,10 +4,10 @@ import logging
 import asyncio
 import aiohttp
 from aioresponses import aioresponses
-from monic.core.worker import Worker
-from monic.core.monitor import Monitor
-from monic.core.task import Task, TaskStatus
-from monic.core.probe import Probe, ProbeResponseError
+from monico.core.worker import Worker
+from monico.core.monitor import Monitor
+from monico.core.task import Task, TaskStatus
+from monico.core.probe import Probe, ProbeResponseError
 from ..storage import MemStorage
 
 

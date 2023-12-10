@@ -6,11 +6,11 @@ dependency injection, etc.
 import asyncio
 import logging
 from typing import Optional
-from monic.core.monitor import Monitor
-from monic.core.storage import StorageInterface
-from monic.core.manager import Manager
-from monic.core.worker import Worker
-from monic.core.probe import Probe
+from monico.core.monitor import Monitor
+from monico.core.storage import StorageInterface
+from monico.core.manager import Manager
+from monico.core.worker import Worker
+from monico.core.probe import Probe
 
 
 class App:
