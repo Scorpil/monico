@@ -27,7 +27,7 @@ dynamic = ["dependencies", "readme"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-readme = {file = ["README.md"]}
+readme = {file = ["README.md"], content-type='text/markdown'}
 
 [project.scripts]
 monico = "monico:main"
