@@ -41,6 +41,8 @@ class MonitorSortingOrder(Enum):
 
 
 class StorageInterface(ABC):
+    """Defines the interface for storage backends"""
+
     def connect(self):
         """Connects to the storage backend. Does nothing by default."""
         pass

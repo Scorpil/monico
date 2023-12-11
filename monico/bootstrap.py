@@ -1,7 +1,7 @@
 import logging
 from monico.core.app import App
 from monico.storage.pg import PgStorage
-from monico.config import Config
+from monico.config import Config, ConfigLoader
 
 
 class AppBootstrapException(EnvironmentError):
@@ -27,14 +27,21 @@ class AppContext:
         self.app.shutdown()
 
 
+def build_storage(config: Config) -> PgStorage:
+    """Builds storage from config."""
+
+    storage = PgStorage(config.postgres_uri.value)
+    storage.connect()
+    return storage
+
+
 def build_default_app() -> App:
     """Builds main monico app."""
-    config = Config.build()
-
-    storage = PgStorage(config.postgres_uri)
+    config = ConfigLoader().load()
+    storage = build_storage(config)
 
     log = logging.getLogger("monico")
-    log.setLevel(config.log_level)
+    log.setLevel(config.log_level.value)
 
     ch = logging.StreamHandler()
     ch.setFormatter(
@@ -44,7 +51,7 @@ def build_default_app() -> App:
     )
     log.addHandler(ch)
 
-    log.debug(f"log level set to {config.log_level}")
+    log.debug(f"log level set to {config.log_level.value}")
 
     storage.connect()
     return App(storage, log)

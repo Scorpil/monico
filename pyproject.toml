@@ -22,12 +22,30 @@ classifiers = [
     "Topic :: System :: Monitoring",
     "Topic :: System :: Networking :: Monitoring",
 ]
+dependencies = [
+    "aiohttp==3.8.6",
+    "aiodns==3.1.1",
+    "click==8.1.7",
+    "toml==0.10.2",
+    "rich==13.6.0",
+]
 version = "0.1.dev0"
-dynamic = ["dependencies", "readme"]
+dynamic = ["readme"]
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
 readme = {file = ["README.md"], content-type='text/markdown'}
+
+[project.optional-dependencies]
+dev = [
+    "black==23.11.0",
+    "pytest==7.4.3",
+    "pytest-cov==4.1.0",
+    "pytest-asyncio==0.21.1",
+    "aioresponses==0.7.5",
+]
+postgres = [
+    "psycopg2==2.9.9"
+]
 
 [project.scripts]
 monico = "monico:main"

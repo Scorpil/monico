@@ -1,7 +1,7 @@
 # Monico [![codecov](https://codecov.io/gh/Scorpil/monico/graph/badge.svg?token=2N7NG9INLT)](https://codecov.io/gh/Scorpil/monico)
 
 <p align="center">
-  <img alt="Monico Logo" src="./monico-logo.svg" width="200"/>
+  <img alt="Monico Logo" src="https://github.com/Scorpil/monico/blob/main/monico-logo.svg" width="200"/>
 </p>
 
 ## Introduction
@@ -198,7 +198,7 @@ There are a few core concepts Monico uses:
 - **Manager** is an internal scheduling component in Monico responsible for orchestrating the execution of _Probes_ according to their defined frequencies. It does this be creating tasks for workers to pick up.
 - **Worker** is a component that is responsible for performing monitoring checks (_Probes_) and recording the execution results. Multiple worker singles are allowed to run concurrently to enable scaling.
 
-![architecture diagram](./monico-architecture.jpg)
+![architecture diagram](https://github.com/Scorpil/monico/blob/main/monico-architecture.jpg)
 
 # TODO
 
