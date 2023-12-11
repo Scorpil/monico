@@ -147,7 +147,7 @@ Complete app state is stored in database, so it's possible to e.g. run manager/w
 It's possible to run `monico` in Docker by building an image as follows:
 
 ```
-docker build . -t monic
+docker build . -t monico
 ```
 
 Then running monico as follows:
@@ -165,7 +165,7 @@ docker run -tie MONICO_POSTGRES_URI="postgres://user:pwd@host:5432/monico" monic
 
 To execute tests, you need to install development dependencies:
 ```
-pip install -r requirements-dev.txt
+pip install '.[dev]'
 ```
 
 Now you can run unit tests with

@@ -1,6 +1,6 @@
 import os
 import toml
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, TypeVar, Generic
 
 
@@ -27,6 +27,11 @@ class ConfigFileConfigSource:
     def __str__(self):
         return f"config file {self.location}, field: {self.field}"
 
+@dataclass
+class DefaultConfigSource:
+    def __str__(self):
+        return "default value"
+
 
 @dataclass
 class ConfigValue(Generic[T]):
@@ -38,7 +43,9 @@ class ConfigValue(Generic[T]):
 class Config:
     sqlite_uri: Optional[ConfigValue[str]] = None
     postgres_uri: Optional[ConfigValue[str]] = None
-    log_level: ConfigValue[str] = "WARNING"
+    log_level: ConfigValue[str] = field(
+        default_factory=lambda: ConfigValue(value="WARNING", source=DefaultConfigSource())
+    )
 
     def __repr__(self):
         value_strings = [
