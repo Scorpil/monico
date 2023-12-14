@@ -28,6 +28,7 @@ class AppContext:
     def __exit__(self, *args):
         self.app.shutdown()
 
+
 def build_storage(config: Config, log: logging.Logger) -> PgStorage:
     """Builds storage from config."""
     if config.postgres_uri is None and config.sqlite_uri is None:

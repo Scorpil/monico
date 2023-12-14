@@ -14,7 +14,7 @@ class MemStorage(StorageInterface):
         self.monitors = {}
         self.tasks = {}
         self.probes = {}
-    
+
     def connect(self):
         pass
 

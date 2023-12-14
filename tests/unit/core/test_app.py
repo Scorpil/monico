@@ -39,11 +39,13 @@ def test_setup(app):
     assert setup_called
     assert not setup_called_with_force
 
+
 def test_connect(app):
     with mock.patch.object(MemStorage, "connect"):
         app.connect()
         print("app.storage.connect: ", app.storage)
         assert app.storage.connect.called_once()
+
 
 def test_status(app):
     app.storage.monitors = {
