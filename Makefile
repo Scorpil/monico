@@ -6,6 +6,9 @@ SYSTEM_PYTHON=python3
 VENV_ROOT=venv
 VENV_BIN=$(VENV_ROOT)/bin
 
+.PHONY: install
+install: venv install-venv
+
 venv:
 	@echo $(H1)Creating venv in ./${VENV_ROOT} $(H1END)
 
@@ -20,8 +23,8 @@ venv:
 	@echo
 	@echo '(documentation: https://docs.python.org/3/library/venv.html)'
 
-.PHONY: install
-install: # install all dependencies
+.PHONY: install-venv
+install-venv: # install all dependencies
 	@echo $(H1)Updating package tools$(H1END)
 	$(VENV_BIN)/pip install --upgrade pip wheel build
 
