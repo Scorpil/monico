@@ -29,7 +29,7 @@ dependencies = [
     "toml==0.10.2",
     "rich==13.6.0",
 ]
-version = "0.1.dev0"
+version = "0.1.dev1"
 dynamic = ["readme"]
 
 [tool.setuptools.dynamic]

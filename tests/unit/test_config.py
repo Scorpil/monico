@@ -10,6 +10,7 @@ def test_repr():
         == "<Config: sqlite_uri=None, postgres_uri=postgres://localhost/monico, log_level=DEBUG>"
     )
 
+
 def test_sets_default_values():
     loader = ConfigLoader()
     assert loader.config.postgres_uri is None

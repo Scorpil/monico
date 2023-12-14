@@ -30,6 +30,10 @@ class App:
         """Initializes the application"""
         self.storage.setup(force)
 
+    def connect(self):
+        """Connects to the storage backend"""
+        self.storage.connect()
+
     def status(self, mid: str, limit_probes=10) -> (Monitor, [Probe]):
         """Checks the status of the monitor: returns the monitor and the list of most recent probes"""
         monitor = self.storage.read_monitor(mid)

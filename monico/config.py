@@ -27,6 +27,7 @@ class ConfigFileConfigSource:
     def __str__(self):
         return f"config file {self.location}, field: {self.field}"
 
+
 @dataclass
 class DefaultConfigSource:
     def __str__(self):
@@ -44,7 +45,9 @@ class Config:
     sqlite_uri: Optional[ConfigValue[str]] = None
     postgres_uri: Optional[ConfigValue[str]] = None
     log_level: ConfigValue[str] = field(
-        default_factory=lambda: ConfigValue(value="WARNING", source=DefaultConfigSource())
+        default_factory=lambda: ConfigValue(
+            value="WARNING", source=DefaultConfigSource()
+        )
     )
 
     def __repr__(self):
