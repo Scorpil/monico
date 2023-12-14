@@ -1,7 +1,7 @@
 import logging
-from monico import bootstrap
-from monico.storage.pg import PgStorage
 from unittest import mock
+from monico import bootstrap
+from monico.core.storage import StorageInterface
 
 
 def test_app_context():
@@ -15,12 +15,10 @@ def test_app_context():
 
 
 def test_build_default_app():
-    with mock.patch.object(PgStorage, "connect") as pg_storage_connect_mock:
-        with mock.patch.object(logging, "getLogger") as get_logger_mock:
-            get_logger_mock.return_value = mock.MagicMock()
-            app = bootstrap.build_default_app()
-            assert isinstance(app, bootstrap.App)
-            get_logger_mock.assert_called_once_with("monico")
-            assert app.log is get_logger_mock.return_value
-            assert isinstance(app.storage, PgStorage)
-            assert app.storage.connect.called_once()
+    with mock.patch.object(logging, "getLogger") as get_logger_mock:
+        get_logger_mock.return_value = mock.MagicMock()
+        app = bootstrap.build_default_app()
+        assert isinstance(app, bootstrap.App)
+        get_logger_mock.assert_called_once_with("monico")
+        assert app.log is get_logger_mock.return_value
+        assert isinstance(app.storage, StorageInterface)

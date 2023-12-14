@@ -12,19 +12,12 @@ from monico.core.storage import (
 from monico.core.monitor import Monitor
 from monico.core.task import Task, TaskStatus
 from monico.core.probe import Probe, ProbeResponseError
-
-
-@dataclass
-class TableConfig:
-    monitors: str
-    tasks: str
-    probes: str
+from monico.storage.common import TableConfig
 
 
 class PgStorage(StorageInterface):
     """
-    Memory storage implementation for monico.
-    Used for testing to avoid database dependencies.
+    PostgreSQL storage implementation for monico.
     """
 
     tables: dict
@@ -39,17 +32,17 @@ class PgStorage(StorageInterface):
         )
         self.service_uri = service_uri
 
-    def connect(self):
+    def connect(self) -> None:
         try:
             self.conn = psycopg2.connect(self.service_uri)
             query_sql = "SELECT VERSION()"
             cur = self.conn.cursor()
             cur.execute(query_sql)
-            version = cur.fetchone()[0]
+            _ = cur.fetchone()[0]
             cur.close()
         except psycopg2.OperationalError as e:
             raise StorageConnectionException(
-                f"Could not connect to storage backend: {e}"
+                f"Could not connect to PostgreSQL storage backend: {e}"
             )
 
     def disconnect(self):

@@ -6,6 +6,7 @@ from monico.core.storage import (
     MonitorNotFoundException,
     StorageConnectionException,
 )
+from monico.config import ConfigurationError
 
 
 def _adapt(func):
@@ -17,6 +18,7 @@ def _adapt(func):
         StorageSetupException,
         MonitorAlreadyExistsException,
         MonitorNotFoundException,
+        ConfigurationError,
     ) as e:
         # these are predictable user facing exceptions, so we can just print them
         raise click.ClickException(str(e))

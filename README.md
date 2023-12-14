@@ -1,7 +1,7 @@
 # Monico [![codecov](https://codecov.io/gh/Scorpil/monico/graph/badge.svg?token=2N7NG9INLT)](https://codecov.io/gh/Scorpil/monico)
 
 <p align="center">
-  <img alt="Monico Logo" src="./monico-logo.svg" width="200"/>
+  <img alt="Monico Logo" src="https://github.com/Scorpil/monico/blob/main/monico-logo.svg" width="200"/>
 </p>
 
 ## Introduction
@@ -147,7 +147,7 @@ Complete app state is stored in database, so it's possible to e.g. run manager/w
 It's possible to run `monico` in Docker by building an image as follows:
 
 ```
-docker build . -t monic
+docker build . -t monico
 ```
 
 Then running monico as follows:
@@ -165,7 +165,7 @@ docker run -tie MONICO_POSTGRES_URI="postgres://user:pwd@host:5432/monico" monic
 
 To execute tests, you need to install development dependencies:
 ```
-pip install -r requirements-dev.txt
+pip install '.[dev]'
 ```
 
 Now you can run unit tests with
@@ -198,7 +198,7 @@ There are a few core concepts Monico uses:
 - **Manager** is an internal scheduling component in Monico responsible for orchestrating the execution of _Probes_ according to their defined frequencies. It does this be creating tasks for workers to pick up.
 - **Worker** is a component that is responsible for performing monitoring checks (_Probes_) and recording the execution results. Multiple worker singles are allowed to run concurrently to enable scaling.
 
-![architecture diagram](./monico-architecture.jpg)
+![architecture diagram](https://github.com/Scorpil/monico/blob/main/monico-architecture.jpg)
 
 # TODO
 

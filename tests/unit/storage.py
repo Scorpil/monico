@@ -14,6 +14,9 @@ class MemStorage(StorageInterface):
         self.monitors = {}
         self.tasks = {}
         self.probes = {}
+    
+    def connect(self):
+        pass
 
     def create_monitor(self, monitor):
         id = uuid.uuid4().hex
