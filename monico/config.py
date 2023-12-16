@@ -60,9 +60,9 @@ class Config:
 
 class ConfigLoader:
     CONFIG_FILE_LOCATIONS = [
-        "/etc/monico/.monico.toml",  # System-wide
-        "~/.monico/.monico.toml",  # User's home directory
-        "./.monico.toml",  # Current working directory
+        "/etc/monico/monico.toml",  # System-wide
+        "~/.monico/monico.toml",  # User's home directory
+        "./monico.toml",  # Current working directory
     ]
 
     # names of fields that are storage backends
