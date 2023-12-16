@@ -5,14 +5,15 @@ from monico.core.storage import StorageInterface
 from monico.config import ConfigurationError
 from monico.storage.sqlite import SqliteStorage
 from monico.config import Config, ConfigLoader
+
 try:
     from monico.storage.pg import PgStorage
+
     postgres_support = True
 except ImportError:
     # optional dependency
     # this will fail unless monico[postgres] is installed
     postgres_support = False
-
 
 
 class AppBootstrapException(EnvironmentError):
@@ -38,7 +39,9 @@ class AppContext:
         self.app.shutdown()
 
 
-def build_storage(config: Config, log: logging.Logger, postgres_support: bool) -> StorageInterface:
+def build_storage(
+    config: Config, log: logging.Logger, postgres_support: bool
+) -> StorageInterface:
     """Builds storage from config."""
     if config.postgres_uri is None and config.sqlite_uri is None:
         default_db_location = os.path.expanduser("~/.monic/monico.db")
@@ -59,8 +62,8 @@ def build_storage(config: Config, log: logging.Logger, postgres_support: bool) -
                 "This can be fixed by installing optional monitco "
                 "PostgreSQL dependencies:\n\n"
                 "\tpip install 'monico[postgres]'\n"
-                #"Detailed instructions can be found at:\n"
-                #"https://monico.io/docs/installation/postgres.html"
+                # "Detailed instructions can be found at:\n"
+                # "https://monico.io/docs/installation/postgres.html"
             )
         log.debug(f"using postgres storage: {config.postgres_uri.value}")
         storage = PgStorage(config.postgres_uri.value)
