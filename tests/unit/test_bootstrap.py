@@ -17,7 +17,7 @@ def test_app_context():
 def test_build_default_app():
     with mock.patch.object(logging, "getLogger") as get_logger_mock:
         get_logger_mock.return_value = mock.MagicMock()
-        app = bootstrap.build_default_app()
+        app = bootstrap.build_default_app(postgres_support=True)
         assert isinstance(app, bootstrap.App)
         get_logger_mock.assert_called_once_with("monico")
         assert app.log is get_logger_mock.return_value

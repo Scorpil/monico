@@ -1,4 +1,5 @@
 # Monico [![codecov](https://codecov.io/gh/Scorpil/monico/graph/badge.svg?token=2N7NG9INLT)](https://codecov.io/gh/Scorpil/monico)
+![PyPI Latest Version](https://img.shields.io/pypi/v/monico.svg?style=flat&label=PyPI&color=%234B78E6&logo=&logoColor=white)
 
 <p align="center">
   <img alt="Monico Logo" src="https://github.com/Scorpil/monico/blob/main/monico-logo.svg" width="200"/>
