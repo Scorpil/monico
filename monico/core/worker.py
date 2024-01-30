@@ -58,12 +58,12 @@ class Worker:
             try:
                 # wait minimum of 5 seconds before locking another batch
                 await asyncio.gather(asyncio.sleep(self.MIN_WAIT_TIME), *tasks)
-            except Exception as e:
-                self.log.error(f"worker encountered an unexpected exception: {e}")
-                continue
             except asyncio.CancelledError:
                 self.log.info("worker process has been cancelled")
                 break
+            except Exception as e:
+                self.log.error(f"worker encountered an unexpected exception: {e}")
+                continue
 
     async def run_task(self, task: Task):
         """Runs a single instance of a task (probe) and records the result"""
